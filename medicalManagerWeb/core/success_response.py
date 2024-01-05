@@ -9,7 +9,7 @@ class SuccessResponse(Response):
         super().__init__(data=data, status=status, content_type=content_type)
         self.metadata = metadata
         self.message = message
-        self.data = metadata
+        self.data = {"message": self.message, "status": status, "metadata": metadata}
 
 
 class OKResponse(SuccessResponse):

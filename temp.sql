@@ -1,0 +1,1 @@
+DELETE FROM medicalManagerWeb_usersignuprequest;
