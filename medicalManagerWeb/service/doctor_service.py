@@ -38,3 +38,10 @@ def get_single_doctor(doctor_id: str):
         return BadRequestErrorResponse(message="Doctor not found")
     
     return OKResponse(message="Get doctor successfully", metadata=format_doctor(doctor))
+
+
+def get_all_doctors():
+    doctors = list(Doctor.objects.all())
+    formatted_doctors = [format_doctor(doctor) for doctor in doctors]
+
+    return OKResponse(message="Get all doctors", metadata=formatted_doctors)
