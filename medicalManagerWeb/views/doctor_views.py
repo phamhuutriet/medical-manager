@@ -4,10 +4,12 @@ from ..core.success_response import *
 from ..service.doctor_service import *
 
 
-@api_view(["GET"])
+@api_view(["GET", "PATCH"])
 def single_doctor_view(request, did):
     if request.method == "GET":
         return get_single_doctor(did)
+    elif request.method == "PATCH":
+        return update_doctor(request.data, did)
 
 
 @api_view(["POST", "GET"]) 
