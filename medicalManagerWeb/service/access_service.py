@@ -75,7 +75,7 @@ def sign_in(request):
         return BadRequestErrorResponse(message="Invalid username or password")
     
     # Generate tokens
-    token_payload = {"username": username, "id": user.pk}
+    token_payload = {"username": username, "id": str(user.pk)}
     public_key, private_key = generate_rsa_key_pair()
     access_token, refresh_token = create_token_pair(
         token_payload,
@@ -92,7 +92,7 @@ def sign_in(request):
     response = {
         "accessToken": access_token,
         "refreshToken": refresh_token,
-        "authorId": user.pk,
+        "userId": str(user.pk),
     }
 
     return OKResponse(message="sign in", metadata=response)
