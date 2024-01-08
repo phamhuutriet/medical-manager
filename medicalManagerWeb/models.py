@@ -1,8 +1,9 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password
 from phonenumber_field.modelfields import PhoneNumberField
-import uuid
+from .core.enums import *
 
 
 class MedicalUser(AbstractUser):
@@ -41,3 +42,21 @@ class Doctor(models.Model):
     name = models.CharField(max_length=100, unique=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
     phone_number = PhoneNumberField()   
+
+
+class Patient(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    GENDER_CHOICES = [
+        (GENDER.M, 'Male'),
+        (GENDER.F, 'Female'),
+        (GENDER.O, 'Other'),
+    ]
+
+    name = models.CharField(max_length=100)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    date_of_birth = models.DateField()
+    address = models.CharField(max_length=255)
+    phone_number = PhoneNumberField()
+    note = models.TextField(blank=True)
+    allergies = models.TextField() # encoded list
+
