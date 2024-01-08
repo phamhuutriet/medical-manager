@@ -3,3 +3,6 @@ DELETE FROM medicalManagerWeb_medicaluser;
 DELETE FROM medicalManagerWeb_doctor;
 DELETE FROM medicalManagerWeb_keytoken;
 DELETE FROM medicalManagerWeb_role;
+DELETE FROM medicalManagerWeb_record;
+DELETE FROM medicalManagerWeb_template;
+DROP TABLE medicalManagerWeb_record;

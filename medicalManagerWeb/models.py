@@ -60,3 +60,43 @@ class Patient(models.Model):
     note = models.TextField(blank=True)
     allergies = models.TextField() # encoded list
 
+
+class Template(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255, unique=True)
+    # encoded object
+    # object format: {<column_name> : <column_type>} -> must have enum?
+    medical_history_columns = models.TextField()  
+    # encoded object
+    # object format: {<column_name> : <column_type>} -> must have enum?
+    observation_columns = models.TextField()
+    # encoded object
+    # object format: {<column_name> : <column_type>} -> must have enum?
+    treatment_columns = models.TextField()
+    user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
+
+
+class Record(models.Model):
+    template = models.ForeignKey(Template, on_delete=models.CASCADE)
+    record_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    reason_for_visit = models.CharField(max_length=255)
+    symptom = models.CharField(max_length=255)
+    medical_history = models.TextField()  # encoded list of objects
+    vital_signs = models.UUIDField(default=uuid.uuid4, editable=False)
+    date = models.DateField(auto_now=True)
+    observation = models.TextField(blank=True)
+    diagnosis = models.CharField(max_length=255)
+    primary_doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
+    treatment_plan = models.TextField()  # encoded list
+    version = models.IntegerField(editable=False)
+
+    class Meta:
+        unique_together = [['record_id', 'version']]
+
+    def save(self, *args, **kwargs):
+        if not self.version:
+            # Retrieve the latest version of the current record and increment it by 1
+            latest_version = Record.objects.filter(id=self.id).order_by('-version').first()
+            self.version = (latest_version.version if latest_version else 0) + 1
+        super(Record, self).save(*args, **kwargs)
