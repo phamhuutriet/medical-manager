@@ -100,6 +100,6 @@ class Record(models.Model):
     def save(self, *args, **kwargs):
         if not self.version:
             # Retrieve the latest version of the current record and increment it by 1
-            latest_version = Record.objects.filter(id=self.id).order_by('-version').first()
+            latest_version = Record.objects.filter(record_id=self.record_id).order_by('-version').first()
             self.version = (latest_version.version if latest_version else 0) + 1
         super(Record, self).save(*args, **kwargs)

@@ -6,4 +6,5 @@ urlpatterns = [
     path('', multiple_patients_view, name="multiple_patients_view"),
     path('<str:pid>/', single_patients_view, name="single_patients_view"),
     path('<str:pid>/records/', multiple_record_view, name="multiple_record_view"),
+    path('<str:pid>/records/<str:rid>/', single_record_view, name="single_record_view"),
 ]
