@@ -5,6 +5,6 @@ from ..service.record_service import *
 
 
 @api_view(["POST"])
-def multiple_record_view(request, pid):
+def multiple_record_view(request, pid, uid):
     if request.method == "POST":
-        return create_record(request.data)
+        return create_record(request.data, pid)

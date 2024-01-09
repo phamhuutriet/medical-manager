@@ -6,7 +6,7 @@ from ..models import *
 from ..utils.formatter import *
 
 
-def create_doctor(request_data):
+def create_doctor(request_data, uid):
     try:
         name = request_data["name"]
         phone_number = request_data["phoneNumber"]
@@ -19,11 +19,14 @@ def create_doctor(request_data):
     except ObjectDoesNotExist:
         return BadRequestErrorResponse(message="Role not found")
     
+    user = MedicalUser.objects.get(pk=uid)
+    
     try:
         doctor = Doctor()
         doctor.name = name
         doctor.phone_number = phone_number
         doctor.role = role 
+        doctor.user = user
         doctor.save()
     except IntegrityError:
         return BadRequestErrorResponse(message="Doctor name is already existed")

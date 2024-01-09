@@ -5,16 +5,16 @@ from ..service.patient_service import *
 
 
 @api_view(["POST", "GET"])
-def multiple_patients_view(request):
+def multiple_patients_view(request, uid):
     if request.method == "POST":
-        return create_patient(request.data)
+        return create_patient(request.data, uid)
     elif request.method == "GET":
-        return get_all_patients()
+        return get_all_patients(uid)
     
 
 @api_view(["GET", "PATCH"])
-def single_patients_view(request, pid):
+def single_patients_view(request, pid, uid):
     if request.method == "GET":
-        return get_patient(pid)
+        return get_patient(pid, uid)
     elif request.method == "PATCH":
-        return update_patients(request.data, pid)
+        return update_patients(request.data, pid, uid)

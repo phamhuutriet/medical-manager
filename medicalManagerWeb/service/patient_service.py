@@ -7,7 +7,12 @@ from ..utils.formatter import *
 import json
 
 
-def create_patient(request_data):
+def is_user_patient(user: MedicalUser, patient: Patient):
+    user_patients = Patient.objects.all().filter(user=user)
+    return patient in user_patients
+
+
+def create_patient(request_data, uid):
     try:
         name = request_data["name"]
         gender = request_data["gender"]
@@ -19,6 +24,7 @@ def create_patient(request_data):
     except KeyError as e:
         return BadRequestErrorResponse(message="Key error: " + str(e))
     
+    user = MedicalUser.objects.get(pk=uid)
 
     try: 
         patient = Patient()
@@ -29,6 +35,7 @@ def create_patient(request_data):
         patient.phone_number = phone_number
         patient.note = note
         patient.allergies = json.dumps(allergies)
+        patient.user = user
         patient.save()
     except Exception as e:
         return BadRequestErrorResponse(message="Error saving patient: " + str(e))
@@ -36,28 +43,37 @@ def create_patient(request_data):
     return SuccessResponse(message="Patient created", metadata=format_patient(patient))
 
 
-def get_patient(pid):
+def get_patient(pid, uid):
     try:
         patient = Patient.objects.get(pk=pid)
     except ObjectDoesNotExist:
         return BadRequestErrorResponse(message="Patient not found")
     
+    user = MedicalUser.objects.get(pk=uid)
+    if not is_user_patient(user, patient):
+        return BadRequestErrorResponse(message="You don't have permission to view this patient")
+    
     return OKResponse(message="Get patient successfully", metadata=format_patient(patient))
 
 
-def get_all_patients(query_params):
+def get_all_patients(uid):
     # TODO: filter by doctor and date -> must have record model first
-    patients = list(Patient.objects.all())
+    user = MedicalUser.objects.get(pk=uid)
+    patients = list(Patient.objects.all().filter(user=user))
     formatted_patients = [format_patient(patient) for patient in patients]
 
     return OKResponse(message="Get all patient successfully", metadata=formatted_patients)
 
 
-def update_patients(request_data, pid):
+def update_patients(request_data, pid, uid):
     try:
         patient = Patient.objects.get(pk=pid)
     except ObjectDoesNotExist:
         return BadRequestErrorResponse(message="Patient not found")
+    
+    user = MedicalUser.objects.get(pk=uid)
+    if not is_user_patient(user, patient):
+        return BadRequestErrorResponse(message="You don't have permission to update this patient")
     
     try:
         name = request_data["name"]

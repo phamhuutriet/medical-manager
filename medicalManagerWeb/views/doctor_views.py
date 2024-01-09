@@ -13,9 +13,9 @@ def single_doctor_view(request, did):
 
 
 @api_view(["POST", "GET"]) 
-def multiple_doctor_view(request):
+def multiple_doctor_view(request, uid):
     if request.method == "POST":
-        return create_doctor(request.data)
+        return create_doctor(request.data, uid)
     elif request.method == "GET":
         return get_all_doctors()
     

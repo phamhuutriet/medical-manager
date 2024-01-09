@@ -35,6 +35,7 @@ class KeyToken(models.Model):
 class Role(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
+    user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
 
 
 class Doctor(models.Model):
@@ -42,6 +43,7 @@ class Doctor(models.Model):
     name = models.CharField(max_length=100, unique=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
     phone_number = PhoneNumberField()   
+    user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
 
 
 class Patient(models.Model):
@@ -59,6 +61,7 @@ class Patient(models.Model):
     phone_number = PhoneNumberField()
     note = models.TextField(blank=True)
     allergies = models.TextField() # encoded list
+    user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
 
 
 class Template(models.Model):
@@ -83,7 +86,7 @@ class Record(models.Model):
     reason_for_visit = models.CharField(max_length=255)
     symptom = models.CharField(max_length=255)
     medical_history = models.TextField()  # encoded list of objects
-    vital_signs = models.UUIDField(default=uuid.uuid4, editable=False)
+    vital_signs = models.TextField()  # encoded list of objects
     date = models.DateField(auto_now=True)
     observation = models.TextField(blank=True)
     diagnosis = models.CharField(max_length=255)
