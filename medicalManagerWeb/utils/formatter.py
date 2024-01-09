@@ -56,3 +56,11 @@ def format_template(template: Template):
         "observationColumns": json.loads(template.observation_columns),
         "treatmentColumns": json.loads(template.treatment_columns)
     }
+
+
+def format_treatment(treatment: Treatment):
+    return {
+        "id": str(treatment.pk),
+        "record": format_record(treatment.record),
+        "data": json.loads(treatment.data)
+    }

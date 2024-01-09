@@ -40,6 +40,13 @@ def validate_record_template(record: Record, template: Template):
     template_observation = json.loads(template.observation_columns)
     is_valid_observation = validate_single_template_field(record_observation, template_observation)
 
-    # TODO: validate treatment
-
     return is_valid_medical_history and is_valid_observation
+
+
+def validate_treatment_template(treatment: Treatment, template: Template):
+    # Validate treatment columns
+    treatment_data = json.loads(treatment.data)
+    template_treatment_columns = json.loads(template.treatment_columns)
+    is_valid_treatment = validate_single_template_field(treatment_data, template_treatment_columns)
+
+    return is_valid_treatment

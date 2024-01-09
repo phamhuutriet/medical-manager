@@ -103,3 +103,12 @@ class Record(models.Model):
             latest_version = Record.objects.filter(record_id=self.record_id).order_by('-version').first()
             self.version = (latest_version.version if latest_version else 0) + 1
         super(Record, self).save(*args, **kwargs)
+
+
+class Treatment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    template = models.ForeignKey(Template, on_delete=models.CASCADE)
+    record = models.ForeignKey(Record, on_delete=models.CASCADE)
+    data = models.TextField() # encoded object
+
+    

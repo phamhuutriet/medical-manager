@@ -1,7 +1,6 @@
 from ..core.error_response import *
 from ..core.success_response import *
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError
 from django.db.models import OuterRef, Subquery
 from ..models import *
 from ..utils.formatter import *
@@ -85,6 +84,11 @@ def get_record(pid, rid, query_params):
         return BadRequestErrorResponse(message="Record not found")
     
     patient = Patient.objects.get(pk=pid)
+
+    # Validate template first
+    if not validate_record_template(record, record.template):
+        return BadRequestErrorResponse(message="Template and record are not matched")
+
     if not is_patient_record(patient, record):
         return BadRequestErrorResponse(message="You don't have permission to view this record")
         
