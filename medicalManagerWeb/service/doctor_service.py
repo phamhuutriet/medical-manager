@@ -34,7 +34,7 @@ def create_doctor(request_data, uid):
     return SuccessResponse(message="Doctor created", metadata=format_doctor(doctor))
 
 
-def update_doctor(request_data, did):
+def update_doctor(request_data, uid, did):
     try:
         name = request_data["name"]
         phone_number = request_data["phoneNumber"]
@@ -46,9 +46,15 @@ def update_doctor(request_data, did):
         role = Role.objects.get(pk=role_id)
     except ObjectDoesNotExist:
         return BadRequestErrorResponse(message="Role not found")
+    
+    user = MedicalUser.objects.get(pk=uid)
 
     try: 
         doctor = Doctor.objects.get(pk=did)
+
+        if doctor.user != user:
+            return BadRequestErrorResponse(message="You don't have permission to update this doctor")
+
         doctor.name = name
         doctor.phone_number = phone_number
         doctor.role = role
@@ -59,17 +65,22 @@ def update_doctor(request_data, did):
     return SuccessResponse(message="Doctor updated", metadata=format_doctor(doctor))
 
 
-def get_single_doctor(doctor_id: str):
+def get_single_doctor(uid, doctor_id: str):
     try:
         doctor = Doctor.objects.get(pk=doctor_id)
     except ObjectDoesNotExist:
         return BadRequestErrorResponse(message="Doctor not found")
     
+    user = MedicalUser.objects.get(pk=uid)
+    if doctor.user != user:
+        return BadRequestErrorResponse(message="You don't have permission to view this user")
+    
     return OKResponse(message="Get doctor successfully", metadata=format_doctor(doctor))
 
 
-def get_all_doctors():
-    doctors = list(Doctor.objects.all())
+def get_all_doctors(uid):
+    user = MedicalUser.objects.get(pk=uid)
+    doctors = list(Doctor.objects.all().filter(user=user))
     formatted_doctors = [format_doctor(doctor) for doctor in doctors]
 
     return OKResponse(message="Get all doctors", metadata=formatted_doctors)
