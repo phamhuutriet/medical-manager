@@ -72,3 +72,34 @@ def create_patient(patient_data, user: MedicalUser):
     patient.save()
 
     return patient
+
+
+def create_record(record_data, patient: Patient, template: Template, doctor: Doctor):
+    record = Record.objects.create(
+        template = template,
+        patient = patient,
+        reason_for_visit = record_data["reasonForVisit"],
+        symptom = record_data["symptom"],
+        medical_history = json.dumps(record_data["medicalHistory"]),
+        vital_signs = json.dumps(record_data["vitalSigns"]),
+        observation = json.dumps(record_data["observations"]),
+        diagnosis = record_data["diagnosis"],
+        primary_doctor = doctor,
+        treatment_plan = json.dumps(record_data["treatmentPlan"]),
+    )
+    record.save()
+
+    return record
+
+
+def create_template(template_data, user: MedicalUser):
+    template = Template.objects.create(
+        name=template_data["name"],
+        medical_history_columns=json.dumps(template_data["medicalHistoryColumns"]),
+        observation_columns=json.dumps(template_data["observationColumns"]),
+        treatment_columns=json.dumps(template_data["treatmentColumns"]),
+        user=user
+    )
+    template.save()
+
+    return template

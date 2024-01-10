@@ -168,3 +168,19 @@ def get_all_records(pid):
     formatted_patient_records = [format_record(record) for record in patient_records]
 
     return OKResponse(message="Get all records from patient", metadata=formatted_patient_records)
+
+
+def record_authenticate(pid, rid, callback):
+    patient = Patient.objects.get(pk=pid)
+
+    try:
+        record = Record.objects.filter(
+            record_id=rid
+        ).order_by('-version')[:1].get()
+    except ObjectDoesNotExist:
+        return NotFoundErrorResponse(message="Record not found")
+    
+    if record.patient != patient:
+        return BadRequestErrorResponse(message="You don't have the permission to access this record")
+    
+    return callback()

@@ -7,11 +7,6 @@ from ..utils.formatter import *
 import json
 
 
-def is_user_patient(user: MedicalUser, patient: Patient):
-    user_patients = Patient.objects.all().filter(user=user)
-    return patient in user_patients
-
-
 def create_patient(request_data, uid):
     try:
         name = request_data["name"]

@@ -2,6 +2,7 @@ from rest_framework.renderers import JSONRenderer
 from .service.access_service import user_authenticate
 from .service.doctor_service import doctor_authenticate
 from .service.patient_service import patient_authenticate
+from .service.record_service import record_authenticate
 from django.urls import resolve, reverse
 
 
@@ -70,6 +71,30 @@ def PatientAuthenticationMiddleware(get_response):
             path_params = path_info.kwargs
             uid, pid = path_params["uid"], path_params["pid"]
             auth_response = patient_authenticate(uid, pid, lambda: get_response(request))
+            auth_response.accepted_renderer = JSONRenderer()
+            auth_response.accepted_media_type = "application/json"
+            auth_response.renderer_context = {}
+            try:
+                return auth_response.render()
+            except:
+                return auth_response
+
+        return get_response(request)
+
+    return middleware
+
+
+def RecordAuthenticationMiddleware(get_response):
+    def middleware(request):
+        path_info = resolve(request.path_info)
+        has_record_pattern = path_info.route.startswith(
+            "service/user/<str:uid>/patients/<str:pid>/records/<str:rid>/"
+        )
+
+        if has_record_pattern:
+            path_params = path_info.kwargs
+            pid, rid = path_params["pid"], path_params["rid"]
+            auth_response = record_authenticate(pid, rid, lambda: get_response(request))
             auth_response.accepted_renderer = JSONRenderer()
             auth_response.accepted_media_type = "application/json"
             auth_response.renderer_context = {}

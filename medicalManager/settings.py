@@ -54,7 +54,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'medicalManagerWeb.middleware.UserAuthenticationMiddleware',
     'medicalManagerWeb.middleware.DoctorAuthenticationMiddleware',
-    'medicalManagerWeb.middleware.PatientAuthenticationMiddleware'
+    'medicalManagerWeb.middleware.PatientAuthenticationMiddleware',
+    'medicalManagerWeb.middleware.RecordAuthenticationMiddleware'
 ]
 
 ROOT_URLCONF = 'medicalManager.urls'
