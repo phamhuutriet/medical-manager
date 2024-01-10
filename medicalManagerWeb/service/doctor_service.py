@@ -17,7 +17,7 @@ def create_doctor(request_data, uid):
     try:
         role = Role.objects.get(pk=role_id)
     except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Role not found")
+        return NotFoundErrorResponse(message="Role not found")
     
     user = MedicalUser.objects.get(pk=uid)
     
@@ -45,7 +45,7 @@ def update_doctor(request_data, uid, did):
     try:
         role = Role.objects.get(pk=role_id)
     except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Role not found")
+        return NotFoundErrorResponse(message="Role not found")
     
     user = MedicalUser.objects.get(pk=uid)
 
@@ -69,7 +69,7 @@ def get_single_doctor(uid, doctor_id: str):
     try:
         doctor = Doctor.objects.get(pk=doctor_id)
     except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Doctor not found")
+        return NotFoundErrorResponse(message="Doctor not found")
     
     user = MedicalUser.objects.get(pk=uid)
     if doctor.user != user:
@@ -84,3 +84,17 @@ def get_all_doctors(uid):
     formatted_doctors = [format_doctor(doctor) for doctor in doctors]
 
     return OKResponse(message="Get all doctors", metadata=formatted_doctors)
+
+
+def doctor_authenticate(uid, did, callback):
+    user = MedicalUser.objects.get(pk=uid)
+    
+    try:
+        doctor = Doctor.objects.get(pk=did)
+    except ObjectDoesNotExist:
+        return NotFoundErrorResponse(message="Doctor not found")
+    
+    if doctor.user != user:
+        return BadRequestErrorResponse(message="You don't have the permission to access this doctor")
+    
+    return callback()

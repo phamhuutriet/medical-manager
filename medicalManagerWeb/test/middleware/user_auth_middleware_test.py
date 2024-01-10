@@ -1,6 +1,6 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
-from .test_utils import *
+from ..test_utils import *
 
 
 # THINGS TO TESTS

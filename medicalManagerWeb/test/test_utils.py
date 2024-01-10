@@ -36,3 +36,22 @@ def create_user(user_data):
         },
         "user": user,
     }
+
+
+def create_doctor(doctor_data, user: MedicalUser, role: Role):
+    doctor = Doctor.objects.create(
+        name=doctor_data["name"],
+        phone_number=doctor_data["phoneNumber"],
+        role=role,
+        user=user
+    )
+    doctor.save()
+
+    return doctor
+
+
+def create_role(role_name: str, user: MedicalUser):
+    role = Role.objects.create(name=role_name, user=user)
+    role.save()
+    
+    return role
