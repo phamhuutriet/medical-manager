@@ -8,12 +8,7 @@ from ..core.template_validator import *
 import json
 
 
-def is_patient_record(patient: Patient, record: Record):
-    patient_records = Record.objects.all().filter(patient=patient)
-    return record in patient_records
-
-
-def create_record(request_data, pid):
+def create_record(request_data, pid, uid):
     try:
         reason_for_visit = request_data["reasonForVisit"]
         symptom = request_data["symptom"]
@@ -27,20 +22,22 @@ def create_record(request_data, pid):
     except KeyError as e:
         return BadRequestErrorResponse(message="Key error: " + str(e))
     
-    try:
-        patient = Patient.objects.get(pk=pid)
-    except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Patient not found")
+    patient = Patient.objects.get(pk=pid)
+    user = MedicalUser.objects.get(pk=uid)
     
     try:
         primary_doctor = Doctor.objects.get(pk=primary_doctor_id)
+        if primary_doctor.user != user:
+            return BadRequestErrorResponse(message="You don't have the permission to access this doctor")
     except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Doctor not found")
+        return NotFoundErrorResponse(message="Doctor not found")
     
     try:
         template = Template.objects.get(pk=template_id)
+        if template.user != user:
+            return BadRequestErrorResponse(message="You don't have the permission to access this template")
     except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Template not found")
+        return NotFoundErrorResponse(message="Template not found")
     
     try:
         record = Record()
@@ -63,10 +60,10 @@ def create_record(request_data, pid):
     except Exception as e:
         return BadRequestErrorResponse(message="Error saving record " + str(e))
     
-    return SuccessResponse(message="Record created", metadata=format_record(record))
+    return CreatedResponse(message="Record created", metadata=format_record(record))
 
 
-def get_record(pid, rid, query_params):
+def get_record(rid, query_params):
     version = None
     if "version" in query_params:
         version = query_params["version"]
@@ -83,19 +80,14 @@ def get_record(pid, rid, query_params):
     except ObjectDoesNotExist:
         return BadRequestErrorResponse(message="Record not found")
     
-    patient = Patient.objects.get(pk=pid)
-
     # Validate template first
     if not validate_record_template(record, record.template):
         return BadRequestErrorResponse(message="Template and record are not matched")
-
-    if not is_patient_record(patient, record):
-        return BadRequestErrorResponse(message="You don't have permission to view this record")
         
     return OKResponse(message="Get record successfully", metadata=format_record(record))
 
 
-def update_record(request_data, pid, rid):
+def update_record(request_data, pid, rid, uid):
     try:
         reason_for_visit = request_data["reasonForVisit"]
         symptom = request_data["symptom"]
@@ -109,20 +101,22 @@ def update_record(request_data, pid, rid):
     except KeyError as e:
         return BadRequestErrorResponse(message="Key error: " + str(e))
     
-    try:
-        patient = Patient.objects.get(pk=pid)
-    except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Patient not found")
-    
+    patient = Patient.objects.get(pk=pid)
+    user = MedicalUser.objects.get(pk=uid)
+
     try:
         primary_doctor = Doctor.objects.get(pk=primary_doctor_id)
+        if primary_doctor.user != user:
+            return BadRequestErrorResponse(message="You don't have the permission to access this doctor")
     except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Doctor not found")
+        return NotFoundErrorResponse(message="Doctor not found")
     
     try:
         template = Template.objects.get(pk=template_id)
+        if template.user != user:
+            return BadRequestErrorResponse(message="You don't have the permission to access this template")
     except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Template not found")
+        return NotFoundErrorResponse(message="Template not found")
     
     try:
         # Create new version of old record -> immutable data
@@ -148,7 +142,7 @@ def update_record(request_data, pid, rid):
     except Exception as e:
         return BadRequestErrorResponse(message="Error saving record " + str(e))
     
-    return SuccessResponse(message="Record updated", metadata=format_record(record))
+    return CreatedResponse(message="Record updated", metadata=format_record(record))
 
 
 def get_all_records(pid):

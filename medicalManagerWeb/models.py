@@ -40,10 +40,13 @@ class Role(models.Model):
 
 class Doctor(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
     phone_number = PhoneNumberField()   
     user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = [['user', 'name']]
 
 
 class Patient(models.Model):
@@ -62,11 +65,12 @@ class Patient(models.Model):
     note = models.TextField(blank=True)
     allergies = models.TextField() # encoded list
     user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
+    
 
 
 class Template(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     # encoded object
     # object format: {<column_name> : <column_type>} -> must have enum?
     medical_history_columns = models.TextField()  
@@ -77,6 +81,9 @@ class Template(models.Model):
     # object format: {<column_name> : <column_type>} -> must have enum?
     treatment_columns = models.TextField()
     user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = [['user', 'name']]
 
 
 class Record(models.Model):
