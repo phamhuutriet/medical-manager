@@ -43,16 +43,8 @@ def create_patient(request_data, uid):
     return CreatedResponse(message="Patient created", metadata=format_patient(patient))
 
 
-def get_patient(pid, uid):
-    try:
-        patient = Patient.objects.get(pk=pid)
-    except ObjectDoesNotExist:
-        return NotFoundErrorResponse(message="Patient not found")
-    
-    user = MedicalUser.objects.get(pk=uid)
-    if not is_user_patient(user, patient):
-        return BadRequestErrorResponse(message="You don't have permission to view this patient")
-    
+def get_patient(pid):
+    patient = Patient.objects.get(pk=pid)
     return OKResponse(message="Get patient successfully", metadata=format_patient(patient))
 
 
@@ -108,7 +100,7 @@ def patient_authenticate(uid, pid, callback):
         patient = Patient.objects.get(pk=pid)
     except ObjectDoesNotExist:
         return NotFoundErrorResponse(message="Patient not found")
-    
+
     if patient.user != user:
         return BadRequestErrorResponse(message="You don't have permission to view this patient")
     

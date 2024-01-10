@@ -40,9 +40,8 @@ def DoctorAuthenticationMiddleware(get_response):
     def middleware(request):
         path_info = resolve(request.path_info)
         has_doctor_pattern = path_info.route.startswith(
-            "/service/user/<str:uid>/doctors/<str:did>/"
+            "service/user/<str:uid>/doctors/<str:did>/"
         )
-
         if has_doctor_pattern:
             path_params = path_info.kwargs
             uid, did = path_params["uid"], path_params["did"]
@@ -63,11 +62,11 @@ def DoctorAuthenticationMiddleware(get_response):
 def PatientAuthenticationMiddleware(get_response):
     def middleware(request):
         path_info = resolve(request.path_info)
-        has_doctor_pattern = path_info.route.startswith(
-            "/service/user/<str:uid>/patients/<str:pid>/"
+        has_patient_pattern = path_info.route.startswith(
+            "service/user/<str:uid>/patients/<str:pid>/"
         )
 
-        if has_doctor_pattern:
+        if has_patient_pattern:
             path_params = path_info.kwargs
             uid, pid = path_params["uid"], path_params["pid"]
             auth_response = patient_authenticate(uid, pid, lambda: get_response(request))
