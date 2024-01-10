@@ -1,6 +1,7 @@
 from ..models import *
 from ..utils.token_generator import *
 from ..core.enums import *
+import json
 
 
 def create_user(user_data):
@@ -55,3 +56,19 @@ def create_role(role_name: str, user: MedicalUser):
     role.save()
     
     return role
+
+
+def create_patient(patient_data, user: MedicalUser):
+    patient = Patient.objects.create(
+        name=patient_data["name"],
+        gender=patient_data["gender"],
+        date_of_birth=patient_data["dateOfBirth"],
+        address=patient_data["address"],
+        phone_number=patient_data["phoneNumber"],
+        note=patient_data["note"],
+        allergies=json.dumps(patient_data["allergies"]),
+        user=user
+    )
+    patient.save()
+
+    return patient

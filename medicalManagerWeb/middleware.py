@@ -1,6 +1,7 @@
 from rest_framework.renderers import JSONRenderer
 from .service.access_service import user_authenticate
 from .service.doctor_service import doctor_authenticate
+from .service.patient_service import patient_authenticate
 from django.urls import resolve, reverse
 
 
@@ -35,22 +36,41 @@ def UserAuthenticationMiddleware(get_response):
     return middleware
 
 
-# Doctor url that need doctor auth
-DOCTOR_AUTH_VIEWS = {
-    "single_doctor_view": ["PATCH", "GET"],
-}
-
 def DoctorAuthenticationMiddleware(get_response):
     def middleware(request):
         path_info = resolve(request.path_info)
         has_doctor_pattern = path_info.route.startswith(
-            "service/user/<str:uid>/doctors/<str:did>/"
+            "/service/user/<str:uid>/doctors/<str:did>/"
         )
 
         if has_doctor_pattern:
             path_params = path_info.kwargs
             uid, did = path_params["uid"], path_params["did"]
             auth_response = doctor_authenticate(uid, did, lambda: get_response(request))
+            auth_response.accepted_renderer = JSONRenderer()
+            auth_response.accepted_media_type = "application/json"
+            auth_response.renderer_context = {}
+            try:
+                return auth_response.render()
+            except:
+                return auth_response
+
+        return get_response(request)
+
+    return middleware
+
+
+def PatientAuthenticationMiddleware(get_response):
+    def middleware(request):
+        path_info = resolve(request.path_info)
+        has_doctor_pattern = path_info.route.startswith(
+            "/service/user/<str:uid>/patients/<str:pid>/"
+        )
+
+        if has_doctor_pattern:
+            path_params = path_info.kwargs
+            uid, pid = path_params["uid"], path_params["pid"]
+            auth_response = patient_authenticate(uid, pid, lambda: get_response(request))
             auth_response.accepted_renderer = JSONRenderer()
             auth_response.accepted_media_type = "application/json"
             auth_response.renderer_context = {}

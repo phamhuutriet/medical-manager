@@ -40,14 +40,14 @@ def create_patient(request_data, uid):
     except Exception as e:
         return BadRequestErrorResponse(message="Error saving patient: " + str(e))
     
-    return SuccessResponse(message="Patient created", metadata=format_patient(patient))
+    return CreatedResponse(message="Patient created", metadata=format_patient(patient))
 
 
 def get_patient(pid, uid):
     try:
         patient = Patient.objects.get(pk=pid)
     except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Patient not found")
+        return NotFoundErrorResponse(message="Patient not found")
     
     user = MedicalUser.objects.get(pk=uid)
     if not is_user_patient(user, patient):
@@ -98,4 +98,18 @@ def update_patients(request_data, pid, uid):
     except Exception as e:
         return BadRequestErrorResponse(message="Error updateing patient " + str(e))
     
-    return SuccessResponse(message="Update patient successfully", metadata=format_patient(patient))
+    return CreatedResponse(message="Update patient successfully", metadata=format_patient(patient))
+
+
+def patient_authenticate(uid, pid, callback):
+    user = MedicalUser.objects.get(pk=uid)
+
+    try:
+        patient = Patient.objects.get(pk=pid)
+    except ObjectDoesNotExist:
+        return NotFoundErrorResponse(message="Patient not found")
+    
+    if patient.user != user:
+        return BadRequestErrorResponse(message="You don't have permission to view this patient")
+    
+    return callback()

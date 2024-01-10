@@ -52,7 +52,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'medicalManagerWeb.middleware.UserAuthenticationMiddleware'
+    'medicalManagerWeb.middleware.UserAuthenticationMiddleware',
+    'medicalManagerWeb.middleware.DoctorAuthenticationMiddleware',
+    'medicalManagerWeb.middleware.PatientAuthenticationMiddleware'
 ]
 
 ROOT_URLCONF = 'medicalManager.urls'
