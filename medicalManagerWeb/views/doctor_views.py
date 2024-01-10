@@ -7,9 +7,9 @@ from ..service.doctor_service import *
 @api_view(["GET", "PATCH"])
 def single_doctor_view(request, uid, did):
     if request.method == "GET":
-        return get_single_doctor(uid, did)
+        return get_single_doctor(did)
     elif request.method == "PATCH":
-        return update_doctor(request.data, uid, did)
+        return update_doctor(request.data, did)
 
 
 @api_view(["POST", "GET"]) 

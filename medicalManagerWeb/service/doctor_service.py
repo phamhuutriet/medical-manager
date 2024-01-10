@@ -31,10 +31,10 @@ def create_doctor(request_data, uid):
     except IntegrityError:
         return BadRequestErrorResponse(message="Doctor name is already existed")
 
-    return SuccessResponse(message="Doctor created", metadata=format_doctor(doctor))
+    return CreatedResponse(message="Doctor created", metadata=format_doctor(doctor))
 
 
-def update_doctor(request_data, uid, did):
+def update_doctor(request_data, did):
     try:
         name = request_data["name"]
         phone_number = request_data["phoneNumber"]
@@ -47,34 +47,17 @@ def update_doctor(request_data, uid, did):
     except ObjectDoesNotExist:
         return NotFoundErrorResponse(message="Role not found")
     
-    user = MedicalUser.objects.get(pk=uid)
-
-    try: 
-        doctor = Doctor.objects.get(pk=did)
-
-        if doctor.user != user:
-            return BadRequestErrorResponse(message="You don't have permission to update this doctor")
-
-        doctor.name = name
-        doctor.phone_number = phone_number
-        doctor.role = role
-        doctor.save()
-    except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Doctor not found")
+    doctor = Doctor.objects.get(pk=did)
+    doctor.name = name
+    doctor.phone_number = phone_number
+    doctor.role = role
+    doctor.save()
     
-    return SuccessResponse(message="Doctor updated", metadata=format_doctor(doctor))
+    return CreatedResponse(message="Doctor updated", metadata=format_doctor(doctor))
 
 
-def get_single_doctor(uid, doctor_id: str):
-    try:
-        doctor = Doctor.objects.get(pk=doctor_id)
-    except ObjectDoesNotExist:
-        return NotFoundErrorResponse(message="Doctor not found")
-    
-    user = MedicalUser.objects.get(pk=uid)
-    if doctor.user != user:
-        return BadRequestErrorResponse(message="You don't have permission to view this user")
-    
+def get_single_doctor(did: str):
+    doctor = Doctor.objects.get(pk=did)
     return OKResponse(message="Get doctor successfully", metadata=format_doctor(doctor))
 
 
