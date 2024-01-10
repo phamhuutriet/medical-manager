@@ -54,7 +54,7 @@ class Patient(models.Model):
         (GENDER.O, 'Other'),
     ]
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     date_of_birth = models.DateField()
     address = models.CharField(max_length=255)

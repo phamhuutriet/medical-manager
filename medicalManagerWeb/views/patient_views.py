@@ -17,4 +17,4 @@ def single_patients_view(request, pid, uid):
     if request.method == "GET":
         return get_patient(pid)
     elif request.method == "PATCH":
-        return update_patients(request.data, pid, uid)
+        return update_patients(request.data, pid)

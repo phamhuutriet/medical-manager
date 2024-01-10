@@ -57,15 +57,8 @@ def get_all_patients(uid):
     return OKResponse(message="Get all patient successfully", metadata=formatted_patients)
 
 
-def update_patients(request_data, pid, uid):
-    try:
-        patient = Patient.objects.get(pk=pid)
-    except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Patient not found")
-    
-    user = MedicalUser.objects.get(pk=uid)
-    if not is_user_patient(user, patient):
-        return BadRequestErrorResponse(message="You don't have permission to update this patient")
+def update_patients(request_data, pid):
+    patient = Patient.objects.get(pk=pid)
     
     try:
         name = request_data["name"]
