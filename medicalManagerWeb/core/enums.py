@@ -10,3 +10,8 @@ class GENDER(Enum):
 class TemplateColumnType(Enum):
     TEXT = "TEXT"
     IMAGE = "IMAGE"
+
+
+class Header(Enum):
+    CLIENT_ID = "x-client-id"
+    AUTHORIZATION = "authorization"

@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate
 from ..utils.token_generator import *
 from ..models import *
+from ..core.enums import *
 import os
 
 
@@ -96,3 +97,38 @@ def sign_in(request):
     }
 
     return OKResponse(message="sign in", metadata=response)
+
+
+def user_authenticate(request, callback):
+    auth_header = request.headers
+
+    try:
+        user_id = auth_header[Header.CLIENT_ID.value]
+        access_token = auth_header[Header.AUTHORIZATION.value]
+    except KeyError:
+        return AuthFailureErrorResponse(message="Missing auth headers")
+
+    try:
+        user = MedicalUser.objects.get(pk=user_id)
+    except ObjectDoesNotExist:
+        return AuthFailureErrorResponse(message="Invalid user id")
+
+    try:
+        token = KeyToken.objects.get(user=user)
+    except ObjectDoesNotExist:
+        return NotFoundErrorResponse(message="Token store not found")
+
+    try:
+        decoded_author = jwt.decode(
+            access_token, token.public_key, algorithms=["RS256"]
+        )
+        print(f"Decoded verify auth: {decoded_author}")
+    except jwt.PyJWTError as err:
+        return AuthFailureErrorResponse(
+            message="Failed to verify user and access token"
+        )
+
+    if str(decoded_author["id"]) != str(user_id):
+        return AuthFailureErrorResponse(message="Invalid user id")
+
+    return callback()
