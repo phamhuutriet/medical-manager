@@ -12,17 +12,8 @@ def is_valid_template_column_type(template_column: dict):
     return all(column_type in template_column_types for column_type in template_column.values())
 
 
-def is_user_template(user, template):
-    user_templates = Template.objects.all().filter(user=user)
-    return template in user_templates
-
-
 def create_template(request_data, user_id):
-    # TODO: Add middle ware
-    try:
-        user = MedicalUser.objects.get(pk=user_id)
-    except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="User not found")
+    user = MedicalUser.objects.get(pk=user_id)
 
     try:
         name = request_data["name"]
@@ -48,20 +39,11 @@ def create_template(request_data, user_id):
     except IntegrityError:
         return BadRequestErrorResponse(message="Template name is already existed")
     
-    return SuccessResponse(message="Template created", metadata=format_template(template))
+    return CreatedResponse(message="Template created", metadata=format_template(template))
 
 
-def get_single_template(user_id, template_id):
-    try:
-        template = Template.objects.get(pk=template_id)
-    except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Template not found")
-    
-    user = MedicalUser.objects.get(pk=user_id)
-        
-    if not is_user_template(user, template):
-        return BadRequestErrorResponse(message="You don't have permission to view this template")
-    
+def get_single_template(template_id):
+    template = Template.objects.get(pk=template_id)
     return OKResponse(message="Get template", metadata=format_template(template))
 
 
@@ -73,16 +55,9 @@ def get_all_templates(user_id):
     return OKResponse(message="Get all templates from user", metadata=formatted_templates)
 
 
-def update_template(request_data, user_id, template_id):
-    try:
-        template = Template.objects.get(pk=template_id)
-    except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Template not found")
-    
-    user = MedicalUser.objects.get(pk=user_id)
-    if not is_user_template(user, template):
-        return BadRequestErrorResponse(message="You don't have permission to update this template")
-    
+def update_template(request_data, template_id):
+    template = Template.objects.get(pk=template_id)
+
     try:
         name = request_data["name"]
         medical_history_columns = request_data["medicalHistoryColumns"]
@@ -100,10 +75,9 @@ def update_template(request_data, user_id, template_id):
     template.medical_history_columns = json.dumps(medical_history_columns)
     template.observation_columns = json.dumps(observations_columns)
     template.treatment_columns = json.dumps(treatment_columns)
-    template.user = user
     template.save()
 
-    return SuccessResponse(message="Template updated", metadata=format_template(template))
+    return CreatedResponse(message="Template updated", metadata=format_template(template))
 
 
 def template_authenticate(uid, tid, callback):

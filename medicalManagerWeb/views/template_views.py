@@ -15,6 +15,6 @@ def multiple_template_view(request, uid):
 @api_view(["GET", "PATCH"])
 def single_template_view(request, uid, tid):
     if request.method == "GET":
-        return get_single_template(uid, tid)
+        return get_single_template(tid)
     elif request.method == "PATCH":
-        return update_template(request.data, uid, tid)
+        return update_template(request.data, tid)
