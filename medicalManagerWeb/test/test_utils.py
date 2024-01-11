@@ -103,3 +103,14 @@ def create_template(template_data, user: MedicalUser):
     template.save()
 
     return template
+
+
+def create_treatment(treatment_data, record: Record, template: Template):
+    treatment = Treatment.objects.create(
+        template=template,
+        record=record,
+        data=json.dumps(treatment_data)
+    )
+    treatment.save()
+    
+    return treatment

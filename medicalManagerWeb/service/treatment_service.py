@@ -125,3 +125,19 @@ def get_all_treatments(rid, query_params):
     formatted_treatments = [format_treatment(treatment) for treatment in treatments]
 
     return OKResponse(message="Get all treatments", metadata=formatted_treatments)
+
+
+def treatment_authenticate(rid, tid, callback):
+    record = Record.objects.filter(
+        record_id=rid
+    ).order_by('-version')[:1].get()
+
+    try:
+        treatment = Treatment.objects.get(pk=tid)
+    except ObjectDoesNotExist:
+        return NotFoundErrorResponse(message="Treatment not found")
+    
+    if treatment.record != record:
+        return BadRequestErrorResponse(message="You don't have the permission to access this treatment")
+    
+    return callback()

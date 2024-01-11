@@ -4,6 +4,7 @@ from .service.doctor_service import doctor_authenticate
 from .service.patient_service import patient_authenticate
 from .service.record_service import record_authenticate
 from .service.template_service import template_authenticate
+from .service.treatment_service import treatment_authenticate
 from django.urls import resolve, reverse
 
 
@@ -120,6 +121,30 @@ def TemplateAuthenticationMiddleware(get_response):
             path_params = path_info.kwargs
             uid, tid = path_params["uid"], path_params["tid"]
             auth_response = template_authenticate(uid, tid, lambda: get_response(request))
+            auth_response.accepted_renderer = JSONRenderer()
+            auth_response.accepted_media_type = "application/json"
+            auth_response.renderer_context = {}
+            try:
+                return auth_response.render()
+            except:
+                return auth_response
+
+        return get_response(request)
+
+    return middleware
+
+
+def TreatmentAuthenticationMiddleware(get_response):
+    def middleware(request):
+        path_info = resolve(request.path_info)
+        has_treatment_pattern = path_info.route.startswith(
+            "service/user/<str:uid>/patients/<str:pid>/records/<str:rid>/treatments/<str:tid>/"
+        )
+
+        if has_treatment_pattern:
+            path_params = path_info.kwargs
+            rid, tid = path_params["rid"], path_params["tid"]
+            auth_response = treatment_authenticate(rid, tid, lambda: get_response(request))
             auth_response.accepted_renderer = JSONRenderer()
             auth_response.accepted_media_type = "application/json"
             auth_response.renderer_context = {}
