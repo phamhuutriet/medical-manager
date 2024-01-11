@@ -55,7 +55,8 @@ MIDDLEWARE = [
     'medicalManagerWeb.middleware.UserAuthenticationMiddleware',
     'medicalManagerWeb.middleware.DoctorAuthenticationMiddleware',
     'medicalManagerWeb.middleware.PatientAuthenticationMiddleware',
-    'medicalManagerWeb.middleware.RecordAuthenticationMiddleware'
+    'medicalManagerWeb.middleware.RecordAuthenticationMiddleware',
+    'medicalManagerWeb.middleware.TemplateAuthenticationMiddleware'
 ]
 
 ROOT_URLCONF = 'medicalManager.urls'

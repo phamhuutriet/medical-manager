@@ -104,3 +104,17 @@ def update_template(request_data, user_id, template_id):
     template.save()
 
     return SuccessResponse(message="Template updated", metadata=format_template(template))
+
+
+def template_authenticate(uid, tid, callback):
+    user = MedicalUser.objects.get(pk=uid)
+
+    try:
+        template = Template.objects.get(pk=tid)
+    except ObjectDoesNotExist:
+        return NotFoundErrorResponse(message="Template not found")
+    
+    if template.user != user:
+        return BadRequestErrorResponse(message="You don't have the permission to access this template")
+
+    return callback()
