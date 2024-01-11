@@ -39,7 +39,7 @@ def create_treatment(request_data, rid, query_params):
     except Exception as e:
         return BadRequestErrorResponse(message="Error saving treatment " + str(e))
     
-    return SuccessResponse(message="Treatment created", metadata=format_treatment(treatment))
+    return CreatedResponse(message="Treatment created", metadata=format_treatment(treatment))
 
 
 def get_treatment(rid, tid, query_params):
@@ -59,14 +59,10 @@ def get_treatment(rid, tid, query_params):
     except ObjectDoesNotExist:
         return BadRequestErrorResponse(message="Record not found")
     
-    try:
-        treatment = Treatment.objects.get(pk=tid)
-        if not validate_treatment_template(treatment, record.template):
-            return BadRequestErrorResponse(message="Treatment and template not match")
-        
-    except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Treatment not found")
-    
+    treatment = Treatment.objects.get(pk=tid)
+    if not validate_treatment_template(treatment, record.template):
+        return BadRequestErrorResponse(message="Treatment and template not match")
+            
     if treatment.record != record:
         return BadRequestErrorResponse(message="You don't have permission to view this treatment")
     
@@ -89,11 +85,7 @@ def update_treatment(request_data, rid, tid, query_params):
         return BadRequestErrorResponse(message="Record not found")
     
     template = record.template
-    
-    try:
-        treatment = Treatment.objects.get(pk=tid)
-    except ObjectDoesNotExist:
-        return BadRequestErrorResponse(message="Treatment not found")
+    treatment = Treatment.objects.get(pk=tid)
 
     try:
         treatment.data = json.dumps(request_data)
@@ -103,7 +95,7 @@ def update_treatment(request_data, rid, tid, query_params):
     except Exception as e:
         return BadRequestErrorResponse(message="Error saving treatment " + str(e))
     
-    return SuccessResponse(message="Treatment updated", metadata=format_treatment(treatment))
+    return CreatedResponse(message="Treatment updated", metadata=format_treatment(treatment))
 
 
 def get_all_treatments(rid, query_params):
@@ -127,10 +119,16 @@ def get_all_treatments(rid, query_params):
     return OKResponse(message="Get all treatments", metadata=formatted_treatments)
 
 
-def treatment_authenticate(rid, tid, callback):
-    record = Record.objects.filter(
-        record_id=rid
-    ).order_by('-version')[:1].get()
+def treatment_authenticate(version, rid, tid, callback):
+    if not version:
+        record = Record.objects.filter(
+            record_id=rid
+        ).order_by('-version')[:1].get()
+    else:
+        record = Record.objects.get(
+            record_id=rid,
+            version=version
+        )
 
     try:
         treatment = Treatment.objects.get(pk=tid)
