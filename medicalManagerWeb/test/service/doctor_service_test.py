@@ -15,6 +15,11 @@ import uuid
 # test get all doctors -> return 200
 # test get single doctor -> return 200
 
+DOCTOR_DATA = {
+    "name": "Doctor",
+    "phoneNumber": "7809037033"
+}
+
 
 class TestDoctorService(TestCase):
 
@@ -37,29 +42,27 @@ class TestDoctorService(TestCase):
 
         # Create doctor
         self.role = create_role("temp_role", self.user)
-        self.doctor = create_doctor({
-            "name": "Doctor",
-            "phoneNumber": "7809037033"
-        }, self.user, self.role)
+        self.doctor = create_doctor(DOCTOR_DATA, self.user, self.role)
         self.doctor_id = str(self.doctor.pk)
 
     
     def test_create_doctor_should_return_201(self):
         doctor_data = {
             "name": "Doctor1",
-            "phoneNumber": "7809037033",
-            "role": {
-                "id": str(self.role.pk)
-            }
+            "phoneNumber": "+17809037033",
+            "role_id": self.role.pk
         }
         response = self.client.post(f"/service/user/{self.user_id}/doctors/", doctor_data, format='json')
+        # Only in test, to make it use the camelCaseConverter renderer
         self.assertEqual(response.status_code, 201)
+        parsed_response_data = json.loads(response.content)["metadata"]
+        self.assertTrue(is_equal_fields(parsed_response_data, doctor_data, ["name", "phoneNumber"]))
 
     
     def test_create_doctor_missing_key_should_return_400(self):
         doctor_data = {
             "name": "Doctor1",
-            "phoneNumber": "7809037033",
+            "phoneNumber": "+17809037033",
         }
         response = self.client.post(f"/service/user/{self.user_id}/doctors/", doctor_data, format='json')
         self.assertEqual(response.status_code, 400)
@@ -69,21 +72,23 @@ class TestDoctorService(TestCase):
         random_uuid = uuid.uuid4()
         doctor_data = {
             "name": "Doctor1",
-            "phoneNumber": "7809037033",
+            "phoneNumber": "+17809037033",
             "role": {
-                "id": str(random_uuid)
+                "id": str(random_uuid),
+                "name": self.role.name
             }
         }
         response = self.client.post(f"/service/user/{self.user_id}/doctors/", doctor_data, format='json')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
 
     def test_create_duplicated_doctor_should_return_400(self):
         doctor_data = {
             "name": "Doctor",
-            "phoneNumber": "7809037033",
+            "phoneNumber": "+17809037033",
             "role": {
-                "id": str(self.role.pk)
+                "id": str(self.role.pk),
+                "name": self.role.name
             }
         }
         response = self.client.post(f"/service/user/{self.user_id}/doctors/", doctor_data, format='json')
@@ -93,35 +98,32 @@ class TestDoctorService(TestCase):
     def test_update_doctor_missing_key_should_return_400(self):
         doctor_data = {
             "name": "Doctor1",
-            "phoneNumber": "7809037033",
+            "phoneNumber": "+17809037033",
         }
         response = self.client.patch(f"/service/user/{self.user_id}/doctors/{self.doctor_id}/", doctor_data, format='json')
         self.assertEqual(response.status_code, 400)
 
 
     def test_update_doctor_non_existed_role_should_return_400(self):
-        random_uuid = uuid.uuid4()
         doctor_data = {
             "name": "Doctor1",
-            "phoneNumber": "7809037033",
-            "role": {
-                "id": str(random_uuid)
-            }
+            "phoneNumber": "+17809037033",
+            "role_id": uuid.uuid4()
         }
         response = self.client.patch(f"/service/user/{self.user_id}/doctors/{self.doctor_id}/", doctor_data, format='json')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
 
     def test_update_doctor_should_return_201(self):
         doctor_data = {
             "name": "Doctor1",
-            "phoneNumber": "7809037033",
-            "role": {
-                "id": str(self.role.pk)
-            }
+            "phoneNumber": "+17809037033",
+            "role_id": self.role.pk
         }
         response = self.client.patch(f"/service/user/{self.user_id}/doctors/{self.doctor_id}/", doctor_data, format='json')
         self.assertEqual(response.status_code, 201)
+        parsed_response_data = json.loads(response.content)["metadata"]
+        self.assertTrue(is_equal_fields(parsed_response_data, doctor_data, ["name", "phoneNumber"]))
 
 
     def test_get_all_doctors_should_return_200(self):
@@ -132,3 +134,5 @@ class TestDoctorService(TestCase):
     def test_get_single_doctor_should_return_200(self):
         response = self.client.get(f"/service/user/{self.user_id}/doctors/{self.doctor_id}/")
         self.assertEqual(response.status_code, 200)
+        parsed_response_data = json.loads(response.content)["metadata"]
+        self.assertTrue(is_equal_fields(parsed_response_data, DOCTOR_DATA, ["name", "phoneNumber"]))

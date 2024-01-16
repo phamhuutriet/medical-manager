@@ -3,70 +3,48 @@ from ..core.success_response import *
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from ..models import *
-from ..utils.formatter import *
+from ..core.serializers import *
 
 
 def create_doctor(request_data, uid):
-    try:
-        name = request_data["name"]
-        phone_number = request_data["phoneNumber"]
-        role_id = request_data["role"]["id"]
-    except KeyError as e:
-        return BadRequestErrorResponse(message="Key error: " + str(e))
-    
-    try:
-        role = Role.objects.get(pk=role_id)
-    except ObjectDoesNotExist:
-        return NotFoundErrorResponse(message="Role not found")
-    
+    serializer = DoctorSerializer(data=request_data)
+    serializer.is_valid(raise_exception=True)
     user = MedicalUser.objects.get(pk=uid)
     
     try:
-        doctor = Doctor()
-        doctor.name = name
-        doctor.phone_number = phone_number
-        doctor.role = role 
-        doctor.user = user
-        doctor.save()
+        doctor = serializer.save(user=user)
     except IntegrityError:
         return BadRequestErrorResponse(message="Doctor name is already existed")
-
-    return CreatedResponse(message="Doctor created", metadata=format_doctor(doctor))
+    
+    doctor_serializer = DoctorSerializer(doctor)
+    return CreatedResponse(message="Doctor created", metadata=doctor_serializer.data)
 
 
 def update_doctor(request_data, did):
-    try:
-        name = request_data["name"]
-        phone_number = request_data["phoneNumber"]
-        role_id = request_data["role"]["id"]
-    except KeyError as e:
-        return BadRequestErrorResponse(message="Key error: " + str(e))
-    
-    try:
-        role = Role.objects.get(pk=role_id)
-    except ObjectDoesNotExist:
-        return NotFoundErrorResponse(message="Role not found")
-    
     doctor = Doctor.objects.get(pk=did)
-    doctor.name = name
-    doctor.phone_number = phone_number
-    doctor.role = role
-    doctor.save()
+    serializer = DoctorSerializer(doctor, data=request_data)
+    serializer.is_valid(raise_exception=True)
     
-    return CreatedResponse(message="Doctor updated", metadata=format_doctor(doctor))
+    try:
+        updated_doctor = serializer.save()
+    except IntegrityError:
+        return BadRequestErrorResponse(message="Doctor name is already existed")
+    
+    doctor_serializer = DoctorSerializer(updated_doctor)
+    return CreatedResponse(message="Doctor updated", metadata=doctor_serializer.data)
 
 
 def get_single_doctor(did: str):
     doctor = Doctor.objects.get(pk=did)
-    return OKResponse(message="Get doctor successfully", metadata=format_doctor(doctor))
+    doctor_serializer = DoctorSerializer(doctor)
+    return OKResponse(message="Get doctor successfully", metadata=doctor_serializer.data)
 
 
 def get_all_doctors(uid):
     user = MedicalUser.objects.get(pk=uid)
     doctors = list(Doctor.objects.all().filter(user=user))
-    formatted_doctors = [format_doctor(doctor) for doctor in doctors]
-
-    return OKResponse(message="Get all doctors", metadata=formatted_doctors)
+    serialized_doctors = [DoctorSerializer(doctor).data for doctor in doctors]
+    return OKResponse(message="Get all doctors", metadata=serialized_doctors)
 
 
 def doctor_authenticate(uid, did, callback):

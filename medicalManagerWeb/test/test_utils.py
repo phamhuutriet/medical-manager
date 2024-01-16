@@ -2,6 +2,7 @@ from ..models import *
 from ..utils.token_generator import *
 from ..core.enums import *
 import json
+from typing import List
 
 
 def create_user(user_data):
@@ -114,3 +115,10 @@ def create_treatment(treatment_data, record: Record, template: Template):
     treatment.save()
     
     return treatment
+
+
+def is_equal_fields(obj1: dict, obj2: dict, fields: List):
+    for field in fields:
+        if field not in obj1 or field not in obj2 or obj1[field] != obj2[field]:
+            return False
+    return True
