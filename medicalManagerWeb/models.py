@@ -52,9 +52,9 @@ class Doctor(models.Model):
 class Patient(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     GENDER_CHOICES = [
-        (GENDER.M, 'Male'),
-        (GENDER.F, 'Female'),
-        (GENDER.O, 'Other'),
+        (GENDER.M.value, 'Male'),
+        (GENDER.F.value, 'Female'),
+        (GENDER.O.value, 'Other'),
     ]
 
     name = models.CharField(max_length=100, unique=True)
