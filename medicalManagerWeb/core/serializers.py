@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from ..models import *
 import json
+from ..utils.template_validator import *
 
 
 class JSONListField(serializers.Field):
@@ -12,6 +13,16 @@ class JSONListField(serializers.Field):
         if isinstance(data, list):
             return json.dumps(data)
         raise serializers.ValidationError("Expected a list of data")
+    
+
+class JSONDictField(serializers.Field):
+    def to_representation(self, value):
+        return json.loads(value)
+
+    def to_internal_value(self, data):
+        if isinstance(data, dict):
+            return json.dumps(data)
+        raise serializers.ValidationError("Expected a dict of data")
     
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -61,11 +72,7 @@ class PatientSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
     
     def create(self, validated_data):
-        allergies = validated_data.pop('allergies', None)
         patient = Patient.objects.create(**validated_data)
-        if allergies is not None:
-            patient.allergies = json.dumps(allergies)
-            patient.save()
         return patient
     
     def update(self, instance: Patient, validated_data):
@@ -75,6 +82,43 @@ class PatientSerializer(serializers.ModelSerializer):
         instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
         instance.phone_number = validated_data.get('phone_number', instance.phone_number)
         instance.note = validated_data.get('note', instance.note)
-        instance.allergies = json.dumps(validated_data.get('allergies'))
+        instance.allergies = validated_data.get('allergies', instance.allergies)
         instance.save()
         return instance
+    
+
+
+class TemplateSerializer(serializers.ModelSerializer):
+    medical_history_columns = JSONDictField()
+    observation_columns = JSONDictField()
+    treatment_columns = JSONDictField()
+
+    class Meta:
+        model = Template
+        fields = ['id', 'name', 'medical_history_columns', 'observation_columns', 'treatment_columns']
+
+    def create(self, validated_data):
+        return Template.objects.create(**validated_data)
+    
+    def update(self, instance: Template, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.medical_history_columns = validated_data.get('medical_history_columns', instance.medical_history_columns)
+        instance.observation_columns = validated_data.get('observation_columns', instance.observation_columns)
+        instance.treatment_columns = validated_data.get('treatment_columns', instance.treatment_columns)
+        instance.save()
+        return instance
+    
+    def validate_medical_history_columns(self, value):
+        if not is_valid_template_column_type(json.loads(value)):
+            raise serializers.ValidationError("Medical history columns value type must follow TemplateColumnType")        
+        return value
+    
+    def validate_observation_columns(self, value):
+        if not is_valid_template_column_type(json.loads(value)):
+            raise serializers.ValidationError("Observations columns value type must follow TemplateColumnType")        
+        return value
+    
+    def validate_treatment_columns(self, value):
+        if not is_valid_template_column_type(json.loads(value)):
+            raise serializers.ValidationError("Treatments columns value type must follow TemplateColumnType")        
+        return value

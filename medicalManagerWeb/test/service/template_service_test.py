@@ -64,6 +64,8 @@ class TemplateServiceTest(TestCase):
 
         response = self.client.post(f"/service/user/{self.user_id}/templates/", template_data, format='json')
         self.assertEqual(response.status_code, 201)
+        parsed_response_data = json.loads(response.content)["metadata"]
+        self.assertTrue(is_equal_fields(parsed_response_data, template_data, ["name"]))
 
     
     def test_create_template_with_missing_keys_should_return_400(self):
@@ -92,6 +94,8 @@ class TemplateServiceTest(TestCase):
 
         response = self.client.patch(f"/service/user/{self.user_id}/templates/{self.template_id}/", template_data, format='json')
         self.assertEqual(response.status_code, 201)
+        parsed_response_data = json.loads(response.content)["metadata"]
+        self.assertTrue(is_equal_fields(parsed_response_data, template_data, ["name"]))
 
     
     def test_create_template_with_missing_keys_should_return_400(self):

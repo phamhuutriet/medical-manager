@@ -1,8 +1,8 @@
 from ..core.error_response import *
 from ..core.success_response import *
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from ..models import *
-from ..utils.formatter import *
 from ..core.serializers import *
 
 
@@ -11,10 +11,10 @@ def create_patient(request_data, uid):
     serializer.is_valid(raise_exception=True)
     user = MedicalUser.objects.get(pk=uid)
 
-    try: 
+    try:
         patient = serializer.save(user=user)
-    except Exception as e:
-        return BadRequestErrorResponse(message="Error saving patient: " + str(e))
+    except IntegrityError as e:
+        return BadRequestErrorResponse(message="Error saving patient " + str(e))
     
     patient_serializer = PatientSerializer(patient)
     return CreatedResponse(message="Patient created", metadata=patient_serializer.data)
@@ -31,7 +31,6 @@ def get_all_patients(uid):
     user = MedicalUser.objects.get(pk=uid)
     patients = list(Patient.objects.all().filter(user=user))
     formatted_patients = [PatientSerializer(patient).data for patient in patients]
-
     return OKResponse(message="Get all patient successfully", metadata=formatted_patients)
 
 
@@ -40,10 +39,10 @@ def update_patients(request_data, pid):
     serializer = PatientSerializer(patient, data=request_data)
     serializer.is_valid(raise_exception=True)
 
-    try: 
+    try:
         patient = serializer.save()
-    except Exception as e:
-        return BadRequestErrorResponse(message="Error saving patient: " + str(e))
+    except IntegrityError as e:
+        return BadRequestErrorResponse(message="Error saving patient " + str(e))
     
     patient_serializer = PatientSerializer(patient)
     return CreatedResponse(message="Patient updated", metadata=patient_serializer.data)

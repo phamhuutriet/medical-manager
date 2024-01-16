@@ -92,7 +92,6 @@ class PatientServiceTest(TestCase):
             "allergies": ["cat", "dog"]
         }
         response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/", patient_data, format='json')
-        print(response.data)
         self.assertEqual(response.status_code, 201)
         parsed_response_data = json.loads(response.content)["metadata"]
         self.assertTrue(is_equal_fields(parsed_response_data, patient_data, ["name", "gender", "address", "dateOfBirth", "phoneNumber", "note"]))

@@ -69,14 +69,10 @@ class TestDoctorService(TestCase):
 
 
     def test_create_doctor_non_existed_role_should_return_400(self):
-        random_uuid = uuid.uuid4()
         doctor_data = {
             "name": "Doctor1",
             "phoneNumber": "+17809037033",
-            "role": {
-                "id": str(random_uuid),
-                "name": self.role.name
-            }
+            "role_id": uuid.uuid4()
         }
         response = self.client.post(f"/service/user/{self.user_id}/doctors/", doctor_data, format='json')
         self.assertEqual(response.status_code, 400)
@@ -86,10 +82,7 @@ class TestDoctorService(TestCase):
         doctor_data = {
             "name": "Doctor",
             "phoneNumber": "+17809037033",
-            "role": {
-                "id": str(self.role.pk),
-                "name": self.role.name
-            }
+            "role_id": self.role.pk
         }
         response = self.client.post(f"/service/user/{self.user_id}/doctors/", doctor_data, format='json')
         self.assertEqual(response.status_code, 400)

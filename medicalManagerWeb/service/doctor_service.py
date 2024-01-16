@@ -10,11 +10,11 @@ def create_doctor(request_data, uid):
     serializer = DoctorSerializer(data=request_data)
     serializer.is_valid(raise_exception=True)
     user = MedicalUser.objects.get(pk=uid)
-    
+
     try:
         doctor = serializer.save(user=user)
-    except IntegrityError:
-        return BadRequestErrorResponse(message="Doctor name is already existed")
+    except IntegrityError as e:
+        return BadRequestErrorResponse(message="Error saving doctor: " + str(e))
     
     doctor_serializer = DoctorSerializer(doctor)
     return CreatedResponse(message="Doctor created", metadata=doctor_serializer.data)
@@ -24,12 +24,12 @@ def update_doctor(request_data, did):
     doctor = Doctor.objects.get(pk=did)
     serializer = DoctorSerializer(doctor, data=request_data)
     serializer.is_valid(raise_exception=True)
-    
+
     try:
         updated_doctor = serializer.save()
-    except IntegrityError:
-        return BadRequestErrorResponse(message="Doctor name is already existed")
-    
+    except IntegrityError as e:
+        return BadRequestErrorResponse(message="Error saving doctor: " + str(e))
+        
     doctor_serializer = DoctorSerializer(updated_doctor)
     return CreatedResponse(message="Doctor updated", metadata=doctor_serializer.data)
 
