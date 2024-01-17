@@ -16,6 +16,6 @@ def multiple_record_view(request, uid, pid):
 def single_record_view(request, uid, pid, rid):
     print("VISIT SINGLE RECORD VIEW")
     if request.method == "GET":
-        return get_record(rid, request.GET)
+        return get_record(rid)
     elif request.method == "PATCH":
         return update_record(request.data, pid, rid, uid)

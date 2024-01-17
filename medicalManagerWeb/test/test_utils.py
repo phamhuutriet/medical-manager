@@ -83,7 +83,7 @@ def create_record(record_data, patient: Patient, template: Template, doctor: Doc
         symptom = record_data["symptom"],
         medical_history = json.dumps(record_data["medicalHistory"]),
         vital_signs = json.dumps(record_data["vitalSigns"]),
-        observation = json.dumps(record_data["observations"]),
+        observation = json.dumps(record_data["observation"]),
         diagnosis = record_data["diagnosis"],
         primary_doctor = doctor,
         treatment_plan = json.dumps(record_data["treatmentPlan"]),

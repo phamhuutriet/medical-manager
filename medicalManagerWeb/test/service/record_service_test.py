@@ -38,7 +38,7 @@ RECORD_DATA = {
         "breathRate": 18,
         "bloodPressure": "120/80 mmHg"
     },
-    "observations": {
+    "observation": {
         "Trieu chung ngoai mieng": [
             "Sung ma trai"
         ],
@@ -80,7 +80,7 @@ class RecordServiceTest(TestCase):
             "gender": "M",
             "address": "281/24 lvs",
             "dateOfBirth": "1999-12-02",
-            "phoneNumber": "+8454897822",
+            "phoneNumber": "+84854897822",
             "note": "VIP",
             "allergies": ["cat", "dog"]
         }, self.user)
@@ -90,7 +90,7 @@ class RecordServiceTest(TestCase):
         self.role = create_role("temp_role", self.user)
         self.doctor = create_doctor({
             "name": "Doctor",
-            "phoneNumber": "7809037033"
+            "phoneNumber": "+17809037033"
         }, self.user, self.role)
         self.doctor_id = str(self.doctor.pk)
 
@@ -114,15 +114,14 @@ class RecordServiceTest(TestCase):
 
         # Create record
         self.record = create_record(RECORD_DATA, self.patient, self.template, self.doctor)
-        self.record_id = str(self.record.record_id)
+        self.record_id = str(self.record.pk)
 
     
     def test_create_record_should_return_201(self):
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
+        record_data["primary_doctor_id"] = self.doctor.pk
+        record_data["template_id"] = self.template.pk
         response = self.client.post(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/", record_data, format='json')
-
         self.assertEqual(response.status_code, 201)
 
     
@@ -132,14 +131,12 @@ class RecordServiceTest(TestCase):
         self.assertEqual(response.status_code, 400)
 
 
-    def test_create_record_with_non_existed_doctor_should_return_404(self):
+    def test_create_record_with_non_existed_doctor_should_return_400(self):
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = {
-            "id": uuid.uuid4()
-        }
-        record_data["template"] = format_template(self.template)
+        record_data["primary_doctor_id"] = uuid.uuid4()
+        record_data["template_id"] = self.template.pk
         response = self.client.post(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/", record_data, format='json')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
 
     def test_create_record_with_doctor_not_belong_to_user_should_return_400(self):
@@ -151,25 +148,22 @@ class RecordServiceTest(TestCase):
         })["user"]
         new_doctor = create_doctor({
             "name": "Doctor1",
-            "phoneNumber": "7809037033"
+            "phoneNumber": "+17809037033"
         }, new_user, self.role)
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(new_doctor)
-        record_data["template"] = format_template(self.template)
+        record_data["primary_doctor_id"] = new_doctor.pk
+        record_data["template_id"] = self.template.pk
 
         response = self.client.post(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/", record_data, format='json')
         self.assertEqual(response.status_code, 400)
 
 
-    def test_create_record_with_non_existed_template_should_return_404(self):
+    def test_create_record_with_non_existed_template_should_return_400(self):
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = {
-            "id": uuid.uuid4()
-        }
-
+        record_data["primary_doctor_id"] = self.doctor.pk
+        record_data["template_id"] = uuid.uuid4()
         response = self.client.post(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/", record_data, format='json')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
     
     def test_create_record_with_template_not_belong_user_should_return_400(self):
@@ -194,8 +188,8 @@ class RecordServiceTest(TestCase):
             }
         }, new_user)
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(new_template)
+        record_data["primary_doctor_id"] = self.doctor.pk
+        record_data["template_id"] = new_template.pk
 
         response = self.client.post(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/", record_data, format='json')
         self.assertEqual(response.status_code, 400)
@@ -203,9 +197,9 @@ class RecordServiceTest(TestCase):
 
     def test_create_record_with_mismatch_template_should_return_400(self):
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
-        record_data["observations"] = {
+        record_data["primary_doctor_id"] = self.doctor.pk
+        record_data["template_id"] = self.template.pk
+        record_data["observation"] = {
             "Trieu chung ngoai mienggg": [
                 "Sung ma trai"
             ],
@@ -220,11 +214,13 @@ class RecordServiceTest(TestCase):
     
     def test_update_record_should_return_201(self):
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
+        record_data["primary_doctor_id"] = self.doctor.pk
+        record_data["template_id"] = self.template.pk
+        record_data["symptom"] = "Dau mieng"
         response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
-
         self.assertEqual(response.status_code, 201)
+        parsed_response_data = json.loads(response.content)["metadata"]
+        self.assertTrue(is_equal_fields(parsed_response_data, record_data, ["symptom"]))
 
 
     def test_update_record_with_missing_keys_should_return_400(self):
@@ -233,14 +229,12 @@ class RecordServiceTest(TestCase):
         self.assertEqual(response.status_code, 400)
 
     
-    def test_update_record_with_non_existed_doctor_should_return_404(self):
+    def test_update_record_with_non_existed_doctor_should_return_400(self):
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = {
-            "id": uuid.uuid4()
-        }
-        record_data["template"] = format_template(self.template)
+        record_data["primary_doctor_id"] = uuid.uuid4()
+        record_data["template_id"] = self.template.pk
         response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
 
     def test_update_record_with_doctor_not_belong_to_user_should_return_400(self):
@@ -252,25 +246,22 @@ class RecordServiceTest(TestCase):
         })["user"]
         new_doctor = create_doctor({
             "name": "Doctor1",
-            "phoneNumber": "7809037033"
+            "phoneNumber": "+17809037033"
         }, new_user, self.role)
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(new_doctor)
-        record_data["template"] = format_template(self.template)
+        record_data["primary_doctor_id"] = new_doctor.pk
+        record_data["template_id"] = self.template.pk
 
         response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
         self.assertEqual(response.status_code, 400)
 
     
-    def test_update_record_with_non_existed_template_should_return_404(self):
+    def test_update_record_with_non_existed_template_should_return_400(self):
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = {
-            "id": uuid.uuid4()
-        }
-
+        record_data["primary_doctor_id"] = self.doctor.pk
+        record_data["template_id"] = uuid.uuid4()
         response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
     
     def test_update_record_with_template_not_belong_user_should_return_400(self):
@@ -295,18 +286,17 @@ class RecordServiceTest(TestCase):
             }
         }, new_user)
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(new_template)
-
+        record_data["primary_doctor_id"] = self.doctor.pk
+        record_data["template_id"] = new_template.pk
         response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
         self.assertEqual(response.status_code, 400)
 
 
     def test_update_record_with_mismatch_template_should_return_400(self):
         record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
-        record_data["observations"] = {
+        record_data["primary_doctor_id"] = self.doctor.pk
+        record_data["template_id"] = self.template.pk
+        record_data["observation"] = {
             "Trieu chung ngoai mienggg": [
                 "Sung ma trai"
             ],
@@ -322,26 +312,8 @@ class RecordServiceTest(TestCase):
     def test_get_record_should_return_200(self):
         response = self.client.get(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/")
         self.assertEqual(response.status_code, 200)
-
-    
-    def test_get_record_by_version_should_return_correct_data(self):
-        record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
-        record_data["symptom"] = "A symptom"
-
-        # Get latest version
-        response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
-        response = self.client.get(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/")
-        response_data = response.data["metadata"]
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response_data["symptom"], record_data["symptom"])
-
-        # Get first version
-        response = self.client.get(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/?version=1")
-        response_data = response.data["metadata"]
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response_data["symptom"], RECORD_DATA["symptom"])
+        parsed_response_data = json.loads(response.content)["metadata"]
+        self.assertTrue(is_equal_fields(parsed_response_data, RECORD_DATA, ["symptom", "reasonForVisit", "diagnosis"]))
 
     
     def test_get_all_records_should_return_200(self):
@@ -349,20 +321,3 @@ class RecordServiceTest(TestCase):
         response_data = response.data["metadata"]
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response_data), 1)
-
-
-    def test_get_all_records_should_return_latest_version(self):
-        record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
-        record_data["symptom"] = "A symptom"
-
-        # Get latest version
-        response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
-        response = self.client.get(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/")
-        response_data = response.data["metadata"]
-        self.assertEqual(len(response_data), 1)
-
-        # Check if latest version matched
-        record = response_data[0]
-        self.assertEqual(record["symptom"], record_data["symptom"])

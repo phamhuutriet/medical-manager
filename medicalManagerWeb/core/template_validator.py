@@ -1,8 +1,10 @@
+from djangorestframework_camel_case.util import camel_to_underscore
 from ..models import *
 from ..core.enums import *
 import json
 import base64
 import imghdr
+
 
 def is_base64_image(s):
     # Check if it's a base64 encoded string
@@ -15,13 +17,22 @@ def is_base64_image(s):
 
     # Check if the decoded bytes form a valid image
     return imghdr.what(None, h=decoded_bytes) is not None
+
+def convert_camel_to_snake(obj):
+    if isinstance(obj, dict):
+        return {camel_to_underscore(key): convert_camel_to_snake(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_camel_to_snake(element) for element in obj]
+    else:
+        return obj
     
 
 def validate_single_template_field(concrete_object, template_object):
+    processed_template_object = convert_camel_to_snake(template_object)
     for key, value in concrete_object.items():
-        if key not in template_object:
+        if key not in processed_template_object:
             return False 
-        value_type = template_object[key]
+        value_type = processed_template_object[key]
         if value_type == TemplateColumnType.TEXT and not isinstance(value, str):
             return False 
         if value_type == TemplateColumnType.IMAGE and not is_base64_image(value):
@@ -34,12 +45,12 @@ def validate_record_template(record: Record, template: Template):
     record_medical_history = json.loads(record.medical_history)
     template_medical_history_columns = json.loads(template.medical_history_columns)
     is_valid_medical_history = validate_single_template_field(record_medical_history, template_medical_history_columns)
-
+    
     # Validate observation
     record_observation = json.loads(record.observation)
     template_observation = json.loads(template.observation_columns)
     is_valid_observation = validate_single_template_field(record_observation, template_observation)
-
+    
     return is_valid_medical_history and is_valid_observation
 
 

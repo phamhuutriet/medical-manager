@@ -87,8 +87,8 @@ class Template(models.Model):
 
 
 class Record(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     template = models.ForeignKey(Template, on_delete=models.CASCADE)
-    record_id = models.UUIDField(default=uuid.uuid4, editable=False)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     reason_for_visit = models.CharField(max_length=255)
     symptom = models.CharField(max_length=255)
@@ -99,17 +99,6 @@ class Record(models.Model):
     diagnosis = models.CharField(max_length=255)
     primary_doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     treatment_plan = models.TextField()  # encoded list
-    version = models.IntegerField(editable=False)
-
-    class Meta:
-        unique_together = [['record_id', 'version']]
-
-    def save(self, *args, **kwargs):
-        if not self.version:
-            # Retrieve the latest version of the current record and increment it by 1
-            latest_version = Record.objects.filter(record_id=self.record_id).order_by('-version').first()
-            self.version = (latest_version.version if latest_version else 0) + 1
-        super(Record, self).save(*args, **kwargs)
 
 
 class Treatment(models.Model):
