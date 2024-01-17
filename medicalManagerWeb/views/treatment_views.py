@@ -7,7 +7,7 @@ from ..service.treatment_service import *
 @api_view(["POST", "GET"])
 def multiple_treatment_view(request, uid, pid, rid):
     if request.method == "POST":
-        return create_treatment(request.data, rid, request.GET)
+        return create_treatment(request.data, rid)
     elif request.method == "GET":
         return get_all_treatments(rid, request.GET)
     
@@ -15,6 +15,6 @@ def multiple_treatment_view(request, uid, pid, rid):
 @api_view(["GET", "PATCH"])
 def single_treatment_view(request, uid, pid, rid, tid):
     if request.method == "GET":
-        return get_treatment(rid, tid, request.GET)
+        return get_treatment(tid)
     elif request.method == "PATCH":
-        return update_treatment(request.data, rid, tid, request.GET)
+        return update_treatment(request.data, rid, tid)

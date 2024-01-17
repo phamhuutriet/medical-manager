@@ -11,7 +11,7 @@ import os
 
 def pre_signup(request_data):
     try:
-        display_name = request_data["displayName"]
+        display_name = request_data["display_name"]
         username = request_data["username"]
         password = request_data["password"]
         email = request_data["email"]
@@ -95,7 +95,7 @@ def sign_in(request):
         "refreshToken": refresh_token,
         "userId": str(user.pk),
     }
-
+    
     return OKResponse(message="sign in", metadata=response)
 
 

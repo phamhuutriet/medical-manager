@@ -10,7 +10,7 @@ import uuid
 # test get non existed treatment -> 404
 
 
-class TreatmentMiddlewareTest(TestCase):
+class TestTreatmentMiddleware(TestCase):
 
     def setUp(self):
         # Create user 
@@ -81,7 +81,7 @@ class TreatmentMiddlewareTest(TestCase):
                 "breathRate": 18,
                 "bloodPressure": "120/80 mmHg"
             },
-            "observations": {
+            "observation": {
                 "Trieu chung ngoai mieng": [
                     "Sung ma trai"
                 ],
@@ -96,7 +96,7 @@ class TreatmentMiddlewareTest(TestCase):
                 "Cao voi rang"
             ]            
         }, self.patient, self.template, self.doctor)
-        self.record_id = str(self.record.record_id)
+        self.record_id = str(self.record.pk)
 
         # Create treatment
         self.treatment = create_treatment({
@@ -124,7 +124,7 @@ class TreatmentMiddlewareTest(TestCase):
                 "breathRate": 18,
                 "bloodPressure": "120/80 mmHg"
             },
-            "observations": {
+            "observation": {
                 "Trieu chung ngoai mieng": [
                     "Sung ma trai"
                 ],
@@ -139,7 +139,7 @@ class TreatmentMiddlewareTest(TestCase):
                 "Cao voi rang"
             ]            
         }, self.patient, self.template, self.doctor)
-        record_id = str(record.record_id)
+        record_id = str(record.pk)
 
         response = self.client.get(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{record_id}/treatments/{self.treatment_id}/")
         self.assertEqual(response.status_code, 400)

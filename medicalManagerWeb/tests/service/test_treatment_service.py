@@ -28,7 +28,7 @@ RECORD_DATA = {
         "breathRate": 18,
         "bloodPressure": "120/80 mmHg"
     },
-    "observations": {
+    "observation": {
         "Trieu chung ngoai mieng": [
             "Sung ma trai"
         ],
@@ -104,7 +104,7 @@ class TreatmentServiceTest(TestCase):
 
         # Create record
         self.record = create_record(RECORD_DATA, self.patient, self.template, self.doctor)
-        self.record_id = str(self.record.record_id)
+        self.record_id = str(self.record.pk)
 
         # Create treatment
         self.treatment = create_treatment({
@@ -115,57 +115,18 @@ class TreatmentServiceTest(TestCase):
     
     def test_create_treatment_should_return_201(self):
         treatment_data = {
-            "treatmentType": "tram rang"
+            "data": {
+                "treatmentType": "tram rang"
+            }
         }
         response = self.client.post(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/", treatment_data, format='json')
         self.assertEqual(response.status_code, 201)
-
-    
-    def test_create_treatment_without_version_should_add_treatment_to_latest_record_version(self):
-        record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
-        record_data["symptom"] = "A symptom"
-
-        # Update record
-        self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
-
-        # Add treatment without specifying version
-        treatment_data = {
-            "treatmentType": "tram rang"
-        }
-        response = self.client.post(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/", treatment_data, format='json')
-        self.assertEqual(response.status_code, 201)
-
-        # Compare treatment record
-        treatment_record = response.data["metadata"]["record"]
-        self.assertEqual(treatment_record["symptom"], record_data["symptom"])
-
-
-    def test_create_treatment_with_version_should_add_treatment_to_record_version(self):
-        record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
-        record_data["symptom"] = "A symptom"
-
-        # Update record
-        self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
-
-        # Add treatment without specifying version
-        treatment_data = {
-            "treatmentType": "tram rang"
-        }
-        response = self.client.post(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/?version=1", treatment_data, format='json')
-        self.assertEqual(response.status_code, 201)
-
-        # Compare treatment record
-        treatment_record = response.data["metadata"]["record"]
-        self.assertEqual(treatment_record["symptom"], RECORD_DATA["symptom"])
-
 
     def test_create_treatment_with_mismatched_template_should_return_400(self):
         treatment_data = {
-            "treatmentTypee": "tram rang"
+            "data": {
+                "treatmentTypee": "tram rang"
+            }
         }
         response = self.client.post(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/", treatment_data, format='json')
         self.assertEqual(response.status_code, 400)
@@ -173,70 +134,30 @@ class TreatmentServiceTest(TestCase):
 
     def test_update_treatment_should_return_201(self):
         treatment_data = {
-            "treatmentType": "tram rang cua"
+            "data": {
+                "treatmentType": "tram rang"
+            }
         }
         response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/{self.treatment_id}/", treatment_data, format='json')
         self.assertEqual(response.status_code, 201)
-
-    
-    def test_update_treatment_mismatch_version_should_return_400(self):
-        record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
-        record_data["symptom"] = "A symptom"
-
-        # Update record
-        self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
-
-        # Add treatment without specifying version
-        treatment_data = {
-            "treatmentType": "tram rang"
-        }
-        response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/{self.treatment_id}/", treatment_data, format='json')
-        self.assertEqual(response.status_code, 400)
-
-
-    def test_update_treatment_with_version_should_add_treatment_to_record_version(self):
-        record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
-        record_data["symptom"] = "A symptom"
-
-        # Update record
-        self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
-
-        # Add treatment without specifying version
-        treatment_data = {
-            "treatmentType": "tram rang"
-        }
-        response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/{self.treatment_id}/?version=1", treatment_data, format='json')
-        self.assertEqual(response.status_code, 201)
-
-        # Compare treatment record
-        treatment_record = response.data["metadata"]["record"]
-        self.assertEqual(treatment_record["symptom"], RECORD_DATA["symptom"])
 
 
     def test_update_treatment_with_mismatched_template_should_return_400(self):
         treatment_data = {
-            "treatmentTypee": "tram rang"
+            "data": {
+                "treatmentTypee": "tram rang"
+            }
         }
         response = self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/{self.treatment_id}/", treatment_data, format='json')
         self.assertEqual(response.status_code, 400)
 
+    
+    def test_get_treatment_should_return_200(self):
+        response = self.client.get(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/{self.treatment_id}/")
+        self.assertEqual(response.status_code, 200)
 
-    def test_get_treatment_by_version_should_return_correct_data(self):
+    
+    def test_get_all_treatment_should_return_200(self):
         response = self.client.get(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["metadata"]), 1)
-
-        # Update record
-        record_data = RECORD_DATA.copy()
-        record_data["doctor"] = format_doctor(self.doctor)
-        record_data["template"] = format_template(self.template)
-        record_data["symptom"] = "A symptom"
-        self.client.patch(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/", record_data, format='json')
-        
-        response = self.client.get(f"/service/user/{self.user_id}/patients/{self.patient_id}/records/{self.record_id}/treatments/?version=2")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data["metadata"]), 0)  # new record doesnt have any treatments

@@ -140,12 +140,11 @@ def TreatmentAuthenticationMiddleware(get_response):
         has_treatment_pattern = path_info.route.startswith(
             "service/user/<str:uid>/patients/<str:pid>/records/<str:rid>/treatments/<str:tid>/"
         )
-        version = None if "version" not in request.GET else request.GET["version"]
 
         if has_treatment_pattern:
             path_params = path_info.kwargs
             rid, tid = path_params["rid"], path_params["tid"]
-            auth_response = treatment_authenticate(version, rid, tid, lambda: get_response(request))
+            auth_response = treatment_authenticate(rid, tid, lambda: get_response(request))
             auth_response.accepted_renderer = JSONRenderer()
             auth_response.accepted_media_type = "application/json"
             auth_response.renderer_context = {}

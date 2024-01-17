@@ -81,7 +81,7 @@ class RecordMiddlewareTest(TestCase):
                 "breathRate": 18,
                 "bloodPressure": "120/80 mmHg"
             },
-            "observations": {
+            "observation": {
                 "Trieu chung ngoai mieng": [
                     "Sung ma trai"
                 ],
@@ -96,7 +96,7 @@ class RecordMiddlewareTest(TestCase):
                 "Cao voi rang"
             ]            
         }, self.patient, self.template, self.doctor)
-        self.record_id = str(self.record.record_id)
+        self.record_id = str(self.record.pk)
 
     
     def test_get_record_not_belong_to_patient_should_return_400(self):

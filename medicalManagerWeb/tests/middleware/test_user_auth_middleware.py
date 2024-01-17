@@ -26,7 +26,7 @@ class UserMiddlewareTest(TestCase):
         
     
     def test_call_sign_in_should_return_200(self):
-        response = self.client.post(f"/service/access/signin/", self.user_data)
+        response = self.client.post(f"/service/access/signin/", self.user_data, format='json')
         self.assertEqual(response.status_code, 200)
 
     def test_call_doctor_urls_without_credentails_should_return_401(self):

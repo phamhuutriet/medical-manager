@@ -207,3 +207,37 @@ class RecordSerializer(serializers.ModelSerializer):
 
         record.save()
         return record
+    
+
+class TreatmentSerializer(serializers.ModelSerializer):
+    template = TemplateSerializer(read_only=True)
+    record = RecordSerializer(read_only=True)
+    data = JSONDictField()
+
+    class Meta:
+        model = Treatment
+        fields = ['id', 'template', 'record', 'data']
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
+        treatment = Treatment()
+        treatment.template = validated_data.get("template")
+        treatment.record = validated_data.get("record")
+        treatment.data = validated_data.get("data")
+
+        if not validate_treatment_template(treatment, treatment.template):
+            raise ValidationError("Template and treatment mismatch")
+        
+        treatment.save()
+        return treatment
+    
+    def update(self, treatment: Treatment, validated_data):
+        treatment.template = validated_data.get("template", treatment.template)
+        treatment.record = validated_data.get("record", treatment.record)
+        treatment.data = validated_data.get("data", treatment.data)
+
+        if not validate_treatment_template(treatment, treatment.template):
+            raise ValidationError("Template and treatment mismatch")
+        
+        treatment.save()
+        return treatment
