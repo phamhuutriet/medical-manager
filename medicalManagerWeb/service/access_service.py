@@ -122,7 +122,6 @@ def user_authenticate(request, callback):
         decoded_author = jwt.decode(
             access_token, token.public_key, algorithms=["RS256"]
         )
-        print(f"Decoded verify auth: {decoded_author}")
     except jwt.PyJWTError as err:
         return AuthFailureErrorResponse(
             message="Failed to verify user and access token"
