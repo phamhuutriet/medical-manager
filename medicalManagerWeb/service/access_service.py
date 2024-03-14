@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate
 from ..utils.token_generator import *
 from ..models import *
+from rest_framework_simplejwt.tokens import RefreshToken
 from ..core.enums import *
 import os
 
@@ -76,24 +77,11 @@ def sign_in(request):
     if user is None:
         return BadRequestErrorResponse(message="Invalid email or password")
     
-    # Generate tokens
-    token_payload = {"email": email, "id": str(user.pk)}
-    public_key, private_key = generate_rsa_key_pair()
-    access_token, refresh_token = create_token_pair(
-        token_payload,
-        private_key,
-        public_key,
-    )
-
-    # Save tokens and keys
-    key_token = KeyToken.objects.get(user=user)
-    key_token.public_key = public_key
-    key_token.refresh_token = refresh_token
-    key_token.save()
+    refresh = RefreshToken.for_user(user)
 
     response = {
-        "accessToken": access_token,
-        "refreshToken": refresh_token,
+        "accessToken": str(refresh.access_token),
+        "refreshToken": str(refresh),
         "userId": str(user.pk),
     }
     
@@ -124,13 +112,11 @@ def user_authenticate(request, callback):
             access_token, token.public_key, algorithms=["RS256"]
         )
     except jwt.PyJWTError as err:
-        print("CHECK3")
         return AuthFailureErrorResponse(
             message="Failed to verify user and access token"
         )
 
     if str(decoded_author["id"]) != str(user_id):
-        print("CHECK4")
         return AuthFailureErrorResponse(message="Invalid user id")
 
     return callback()
