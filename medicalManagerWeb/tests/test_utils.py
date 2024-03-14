@@ -9,7 +9,6 @@ def create_user(user_data):
     user = MedicalUser.objects.create(
         username=user_data["username"],
         password=user_data["password"],
-        display_name=user_data["displayName"],
         email=user_data["email"]
     )
 

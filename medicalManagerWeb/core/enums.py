@@ -13,5 +13,5 @@ class TemplateColumnType(Enum):
 
 
 class Header(Enum):
-    CLIENT_ID = "x-client-id"
-    AUTHORIZATION = "authorization"
+    CLIENT_ID = "X-Client-ID"
+    AUTHORIZATION = "local-authorization"

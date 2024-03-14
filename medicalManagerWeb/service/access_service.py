@@ -11,7 +11,6 @@ import os
 
 def pre_signup(request_data):
     try:
-        display_name = request_data["display_name"]
         username = request_data["username"]
         password = request_data["password"]
         email = request_data["email"]
@@ -20,15 +19,18 @@ def pre_signup(request_data):
     
     # Save sign up request 
     signupRequest = UserSignUpRequest()
-    signupRequest.display_name = display_name
     signupRequest.username = username
     signupRequest.password = password
     signupRequest.email = email
 
     try:
         signupRequest.save()
+    except Exception as e:
+        return BadRequestErrorResponse(message='Duplicate email' + str(e))
+
+    try:
         host_name = os.environ.get("HOST_NAME")
-        verify_url = f"{host_name}service/access/verify/?signupId={signupRequest.pk}"
+        verify_url = f"{host_name}/access/verify/?signupId={signupRequest.pk}"
         
         # Call API to send approval email here
         subject = "Medical Manager Sign Up Approval"
@@ -37,7 +39,7 @@ def pre_signup(request_data):
         recipient = [email]
 
         send_mail(subject, message, from_email, recipient)
-        return OKResponse(message="Sign up successfully")
+        return OKResponse(message="Sign up request sent. Please check your email to verify")
     except Exception as e:
         return BadRequestErrorResponse(message="Error sending email " + str(e))
     
@@ -49,7 +51,6 @@ def verify_signup(signup_id):
         return BadRequestErrorResponse(message="Sign up request not found")
     
     medicalUser = MedicalUser()
-    medicalUser.display_name = signup_request.display_name
     medicalUser.username = signup_request.username
     medicalUser.password = signup_request.password
     medicalUser.email = signup_request.email
@@ -65,18 +66,18 @@ def verify_signup(signup_id):
 
 def sign_in(request):
     try:
-        username = request.data["username"]
+        email = request.data["email"]
         password = request.data["password"]
     except KeyError as e:
         return BadRequestErrorResponse(message="Key Error: " + str(e))
     
-    user = authenticate(request, username=username, password=password)
+    user = authenticate(request, email=email, password=password)
 
     if user is None:
-        return BadRequestErrorResponse(message="Invalid username or password")
+        return BadRequestErrorResponse(message="Invalid email or password")
     
     # Generate tokens
-    token_payload = {"username": username, "id": str(user.pk)}
+    token_payload = {"email": email, "id": str(user.pk)}
     public_key, private_key = generate_rsa_key_pair()
     access_token, refresh_token = create_token_pair(
         token_payload,
@@ -123,11 +124,13 @@ def user_authenticate(request, callback):
             access_token, token.public_key, algorithms=["RS256"]
         )
     except jwt.PyJWTError as err:
+        print("CHECK3")
         return AuthFailureErrorResponse(
             message="Failed to verify user and access token"
         )
 
     if str(decoded_author["id"]) != str(user_id):
+        print("CHECK4")
         return AuthFailureErrorResponse(message="Invalid user id")
 
     return callback()

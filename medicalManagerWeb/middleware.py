@@ -23,7 +23,7 @@ def UserAuthenticationMiddleware(get_response):
         # This leave room for customized auth for remote
         if (
             resolved_path_name in USER_AUTH_BYPASS_VIEWS
-            and request.method in USER_AUTH_BYPASS_VIEWS[resolved_path_name]
+            and (request.method in USER_AUTH_BYPASS_VIEWS[resolved_path_name] or request.method == "OPTIONS")
         ):
             return get_response(request)
 

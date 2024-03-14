@@ -19,9 +19,9 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('service/user/<str:uid>/doctors/', include("medicalManagerWeb.urls.doctor_urls")),
-    path('service/access/', include("medicalManagerWeb.urls.access_urls")),
-    path('service/user/<str:uid>/roles/', include("medicalManagerWeb.urls.role_urls")),
-    path('service/user/<str:uid>/patients/', include("medicalManagerWeb.urls.patient_urls")),
-    path('service/user/<str:uid>/templates/', include("medicalManagerWeb.urls.template_urls")),
+    path('user/<str:uid>/doctors/', include("medicalManagerWeb.urls.doctor_urls")),
+    path('access/', include("medicalManagerWeb.urls.access_urls")),
+    path('user/<str:uid>/roles/', include("medicalManagerWeb.urls.role_urls")),
+    path('user/<str:uid>/patients/', include("medicalManagerWeb.urls.patient_urls")),
+    path('user/<str:uid>/templates/', include("medicalManagerWeb.urls.template_urls")),
 ]

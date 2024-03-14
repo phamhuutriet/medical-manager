@@ -8,7 +8,10 @@ from .core.enums import *
 
 class MedicalUser(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    display_name = models.CharField(max_length=255, unique=True)
+    email = models.EmailField(unique=True, blank=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
     
     def save(self, *args, **kwargs):
         if self.password and not self.password.startswith('pbkdf2_sha256$'):
@@ -18,11 +21,10 @@ class MedicalUser(AbstractUser):
 
 class UserSignUpRequest(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    display_name = models.CharField(max_length=255, unique=True)
-    username = models.CharField(max_length=255, unique=True)
+    username = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
     approved = models.BooleanField(default=False)
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
 
 
 class KeyToken(models.Model):
@@ -34,19 +36,30 @@ class KeyToken(models.Model):
 
 class Role(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, unique=True)
-    user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
-
-
-class Doctor(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
-    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
-    phone_number = PhoneNumberField()   
     user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = [['user', 'name']]
+
+
+class Doctor(models.Model):
+    GENDER_CHOICES = [
+        (GENDER.M.value, 'Male'),
+        (GENDER.F.value, 'Female'),
+        (GENDER.O.value, 'Other'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    gender = models.CharField(max_length=100, choices=GENDER_CHOICES)
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
+    phone_number = PhoneNumberField()   
+    user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
+    date_of_birth = models.DateField()
+
+    class Meta:
+        unique_together = [['user', 'first_name', 'last_name']]
 
 
 class Patient(models.Model):

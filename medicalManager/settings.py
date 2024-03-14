@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from corsheaders.defaults import default_headers
+from medicalManagerWeb.core.enums import *
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,7 +29,7 @@ SECRET_KEY = 'django-insecure-+!c^506g2-!^03v-*5neco*03vtv@c80^0viw083y!@tm^auc7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1"]
 
 
 # Application definition
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "medicalManagerWeb",
     'rest_framework',
+    'corsheaders'
 ]
 
 REST_FRAMEWORK = {
@@ -61,12 +63,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'medicalManagerWeb.middleware.UserAuthenticationMiddleware',
-    'medicalManagerWeb.middleware.DoctorAuthenticationMiddleware',
-    'medicalManagerWeb.middleware.PatientAuthenticationMiddleware',
-    'medicalManagerWeb.middleware.RecordAuthenticationMiddleware',
-    'medicalManagerWeb.middleware.TemplateAuthenticationMiddleware',
-    'medicalManagerWeb.middleware.TreatmentAuthenticationMiddleware',
+    # 'medicalManagerWeb.middleware.UserAuthenticationMiddleware',
+    # 'medicalManagerWeb.middleware.DoctorAuthenticationMiddleware',
+    # 'medicalManagerWeb.middleware.PatientAuthenticationMiddleware',
+    # 'medicalManagerWeb.middleware.RecordAuthenticationMiddleware',
+    # 'medicalManagerWeb.middleware.TemplateAuthenticationMiddleware',
+    # 'medicalManagerWeb.middleware.TreatmentAuthenticationMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'medicalManager.urls'
@@ -89,11 +92,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'medicalManager.wsgi.application'
 
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    "X-Client-ID",
-    "local-authorization"
-    # Add other custom headers
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 # Database

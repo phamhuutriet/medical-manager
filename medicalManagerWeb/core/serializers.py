@@ -4,6 +4,7 @@ from ..models import *
 import json
 from ..utils.template_validator import *
 from ..core.template_validator import *
+from datetime import datetime
 
 
 class JSONListField(serializers.Field):
@@ -40,9 +41,20 @@ class DoctorSerializer(serializers.ModelSerializer):
         source='role'
     )
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['date_of_birth'] = instance.date_of_birth.strftime('%d / %m / %Y')
+        return representation
+
+    def to_internal_value(self, data):
+        if 'date_of_birth' in data:
+            data['date_of_birth'] = datetime.strptime(data['date_of_birth'], '%d / %m / %Y').date()
+        return super().to_internal_value(data)
+
+
     class Meta:
         model = Doctor
-        fields = ['id', 'name', 'role', 'role_id', 'phone_number']
+        fields = ['id', 'first_name', 'last_name', 'role', 'role_id', 'phone_number', 'gender', 'date_of_birth']
         read_only_fields = ['id']
 
 
