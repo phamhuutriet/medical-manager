@@ -1,9 +1,9 @@
 from rest_framework.decorators import api_view
 from ..core.success_response import *
-from ..service.doctor_service import *
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
 from ..core.serializers import * 
+from ..core.permissions import UserPermission
     
 
 class DoctorListCreateView(generics.ListCreateAPIView):
@@ -19,7 +19,7 @@ class DoctorListCreateView(generics.ListCreateAPIView):
         serializer.save()
 
     def get_permissions(self):
-        return [IsAuthenticated()]
+        return [IsAuthenticated(), UserPermission()]
     
 
 class DoctorRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
@@ -32,4 +32,4 @@ class DoctorRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         return queryset
 
     def get_permissions(self):
-        return [IsAuthenticated()]
+        return [IsAuthenticated(), UserPermission()]

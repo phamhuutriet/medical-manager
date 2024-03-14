@@ -1,34 +1,9 @@
 from rest_framework.renderers import JSONRenderer
-from .service.access_service import user_authenticate
-from .service.doctor_service import doctor_authenticate
 from .service.patient_service import patient_authenticate
 from .service.record_service import record_authenticate
 from .service.template_service import template_authenticate
 from .service.treatment_service import treatment_authenticate
 from django.urls import resolve, reverse
-
-
-def DoctorAuthenticationMiddleware(get_response):
-    def middleware(request):
-        path_info = resolve(request.path_info)
-        has_doctor_pattern = path_info.route.startswith(
-            'user/<str:uid>/doctors/<str:id>/'
-        )
-        if has_doctor_pattern:
-            path_params = path_info.kwargs
-            uid, did = path_params["uid"], path_params["id"]
-            auth_response = doctor_authenticate(uid, did, lambda: get_response(request))
-            auth_response.accepted_renderer = JSONRenderer()
-            auth_response.accepted_media_type = "application/json"
-            auth_response.renderer_context = {}
-            try:
-                return auth_response.render()
-            except:
-                return auth_response
-
-        return get_response(request)
-
-    return middleware
 
 
 def PatientAuthenticationMiddleware(get_response):

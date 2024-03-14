@@ -58,24 +58,6 @@ class DoctorSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
-    def create(self, validated_data):
-        role = validated_data.pop('role', None)
-        doctor = Doctor.objects.create(**validated_data)
-        if role is not None:
-            doctor.role = role
-            doctor.save()
-        return doctor
-    
-    def update(self, instance: Doctor, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.phone_number = validated_data.get("phone_number", instance.phone_number)
-        role = validated_data.get("role", None)
-        if role is not None:
-            instance.role = role
-        instance.save()
-        return instance
-    
-
 class PatientSerializer(serializers.ModelSerializer):
     allergies = JSONListField()
 
