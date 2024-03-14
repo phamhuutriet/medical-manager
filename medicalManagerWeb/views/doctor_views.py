@@ -1,9 +1,9 @@
 from rest_framework.decorators import api_view
 from ..core.success_response import *
 from rest_framework.permissions import IsAuthenticated
+from ..core.permissions import UserPermission
 from rest_framework import generics
 from ..core.serializers import * 
-from ..core.permissions import UserPermission
     
 
 class DoctorListCreateView(generics.ListCreateAPIView):

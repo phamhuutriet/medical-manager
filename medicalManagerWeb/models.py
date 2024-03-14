@@ -70,7 +70,8 @@ class Patient(models.Model):
         (GENDER.O.value, 'Other'),
     ]
 
-    name = models.CharField(max_length=100, unique=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     date_of_birth = models.DateField()
     address = models.CharField(max_length=255)
@@ -78,7 +79,8 @@ class Patient(models.Model):
     note = models.TextField(blank=True)
     allergies = models.TextField() # encoded list
     user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
-    
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
+    created_at = models.DateField(auto_now=True)
 
 
 class Template(models.Model):

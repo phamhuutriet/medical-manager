@@ -60,27 +60,30 @@ class DoctorSerializer(serializers.ModelSerializer):
 
 class PatientSerializer(serializers.ModelSerializer):
     allergies = JSONListField()
+    doctor = DoctorSerializer(read_only=True)
+    doctor_id = serializers.PrimaryKeyRelatedField(
+        write_only=True, 
+        queryset=Doctor.objects.all(), 
+        source='doctor'
+    )
+
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['date_of_birth'] = instance.date_of_birth.strftime('%d / %m / %Y')
+        representation['created_at'] = instance.created_at.strftime('%d / %m / %Y')
+        return representation
+
+    def to_internal_value(self, data):
+        if 'date_of_birth' in data:
+            data['date_of_birth'] = datetime.strptime(data['date_of_birth'], '%d / %m / %Y').date()
+        return super().to_internal_value(data)
 
     class Meta:
         model = Patient
-        fields = ['id', 'name', 'gender', 'address', 'date_of_birth', 'phone_number', 'note', 'allergies']
-        read_only_fields = ['id']
-    
-    def create(self, validated_data):
-        patient = Patient.objects.create(**validated_data)
-        return patient
-    
-    def update(self, instance: Patient, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.gender = validated_data.get('gender', instance.gender)
-        instance.address = validated_data.get('address', instance.address)
-        instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
-        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
-        instance.note = validated_data.get('note', instance.note)
-        instance.allergies = validated_data.get('allergies', instance.allergies)
-        instance.save()
-        return instance
-    
+        fields = ['id', 'first_name', 'last_name', 'gender', 'address', 'date_of_birth', \
+                  'phone_number', 'note', 'allergies', 'created_at', 'doctor', 'doctor_id']
+        read_only_fields = ['id', 'created_at']
 
 
 class TemplateSerializer(serializers.ModelSerializer):
