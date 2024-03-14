@@ -12,11 +12,11 @@ def DoctorAuthenticationMiddleware(get_response):
     def middleware(request):
         path_info = resolve(request.path_info)
         has_doctor_pattern = path_info.route.startswith(
-            'user/<str:uid>/doctors/<str:did>/'
+            'user/<str:uid>/doctors/<str:id>/'
         )
         if has_doctor_pattern:
             path_params = path_info.kwargs
-            uid, did = path_params["uid"], path_params["did"]
+            uid, did = path_params["uid"], path_params["id"]
             auth_response = doctor_authenticate(uid, did, lambda: get_response(request))
             auth_response.accepted_renderer = JSONRenderer()
             auth_response.accepted_media_type = "application/json"

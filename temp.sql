@@ -9,3 +9,8 @@ DELETE FROM medicalManagerWeb_treatment;
 DROP TABLE medicalManagerWeb_record;
 
 DELETE FROM medicalManagerWeb_doctor WHERE id='a208e9d416a345828710718997436e22';
+
+
+UPDATE medicalManagerWeb_doctor
+SET user_id = "bbfbefd6413f49049861a6ca27b6ffbe"
+WHERE id="667c5520dad94a41a9e09c75301bb519"	
