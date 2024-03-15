@@ -1,9 +1,9 @@
-import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password
 from phonenumber_field.modelfields import PhoneNumberField
 from .core.enums import *
+import uuid
 
 
 class MedicalUser(AbstractUser):
@@ -103,23 +103,31 @@ class Template(models.Model):
 
 class Record(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    template = models.ForeignKey(Template, on_delete=models.CASCADE)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     reason_for_visit = models.CharField(max_length=255)
-    symptom = models.CharField(max_length=255)
     medical_history = models.TextField()  # encoded list of objects
+    symptom = models.CharField(max_length=255)
     vital_signs = models.TextField()  # encoded list of objects
-    date = models.DateField(auto_now=True)
-    observation = models.TextField(blank=True)
     diagnosis = models.CharField(max_length=255)
-    primary_doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     treatment_plan = models.TextField()  # encoded list
-
+    # template = models.ForeignKey(Template, on_delete=models.CASCADE, null=True)
+    created_at = models.DateField(auto_now=True)
+    
 
 class Treatment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    template = models.ForeignKey(Template, on_delete=models.CASCADE)
+    # template = models.ForeignKey(Template, on_delete=models.CASCADE)
+    # data = models.TextField() # encoded object
     record = models.ForeignKey(Record, on_delete=models.CASCADE)
-    data = models.TextField() # encoded object
-
+    date = models.DateField()
+    name = models.CharField(max_length=255)
+    cost = models.IntegerField(default=0)
+    note = models.CharField(max_length=255)
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     
+class Test(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255)
+    created_at = models.DateField() # Must be provided
+    image = models.ImageField(upload_to="test_images/")
+    record = models.ForeignKey(Record, on_delete=models.CASCADE)

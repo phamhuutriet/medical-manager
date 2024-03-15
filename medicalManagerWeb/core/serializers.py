@@ -34,12 +34,12 @@ class RoleSerializer(serializers.ModelSerializer):
 
 
 class DoctorSerializer(serializers.ModelSerializer):
-    role = RoleSerializer(read_only=True)
-    role_id = serializers.PrimaryKeyRelatedField(
-        write_only=True, 
-        queryset=Role.objects.all(), 
-        source='role'
-    )
+    # role = RoleSerializer(read_only=True)
+    # role_id = serializers.PrimaryKeyRelatedField(
+    #     write_only=True, 
+    #     queryset=Role.objects.all(), 
+    #     source='role'
+    # )
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -54,7 +54,7 @@ class DoctorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Doctor
-        fields = ['id', 'first_name', 'last_name', 'role', 'role_id', 'phone_number', 'gender', 'date_of_birth']
+        fields = ['id', 'first_name', 'last_name', 'phone_number', 'gender', 'date_of_birth']
         read_only_fields = ['id']
 
 
@@ -122,119 +122,106 @@ class TemplateSerializer(serializers.ModelSerializer):
         return value
     
 
-class RecordSerializer(serializers.ModelSerializer):
-    template = TemplateSerializer(read_only=True)
-    template_id = serializers.PrimaryKeyRelatedField(
-        write_only=True, 
-        queryset=Template.objects.all(), 
-        source='template'
-    )
-    patient = PatientSerializer(read_only=True)
-    primary_doctor = DoctorSerializer(read_only=True)
-    primary_doctor_id = serializers.PrimaryKeyRelatedField(
+class TreatmentSerializer(serializers.ModelSerializer):
+    doctor = DoctorSerializer()
+    doctor_id = serializers.PrimaryKeyRelatedField(
         write_only=True, 
         queryset=Doctor.objects.all(), 
-        source='primary_doctor'
+        source='doctor'
     )
-    medical_history = JSONDictField()
-    observation = JSONDictField()
-    vital_signs = JSONDictField()
-    treatment_plan = JSONListField()
-
-    class Meta:
-        model = Record
-        fields = ['id', 'template', 'template_id', 'patient', 'reason_for_visit', 'symptom',
-                   'medical_history', 'vital_signs', 'date', 'observation', 'diagnosis',
-                    'primary_doctor', 'primary_doctor_id', 'treatment_plan']
-        read_only_fields = ['id']
-
-
-    def create(self, validated_data):
-        user = validated_data.pop("user")
-
-        # Validate doctor
-        doctor: Doctor = validated_data.get("primary_doctor")
-        if doctor.user != user:
-            raise ValidationError("You can't access this doctor")
-
-        record = Record()
-        record.patient = validated_data.get("patient")
-        record.reason_for_visit = validated_data.get("reason_for_visit")
-        record.symptom = validated_data.get("symptom")
-        record.medical_history = validated_data.get("medical_history")
-        record.vital_signs = validated_data.get("vital_signs")
-        record.observation = validated_data.get("observation")
-        record.diagnosis = validated_data.get("diagnosis")
-        record.primary_doctor = validated_data.get("primary_doctor")
-        record.treatment_plan = validated_data.get("treatment_plan")
-        record.template = validated_data.get("template")
-        
-        # Validate template
-        template: Template = record.template
-        if template.user != user or not validate_record_template(record, template):
-            raise ValidationError("Template and record are not matched")
-
-        record.save()
-        return record
-
-    
-    def update(self, record: Record, validated_data):
-        user = validated_data.pop("user")
-
-        # Validate doctor
-        doctor: Doctor = validated_data.get("primary_doctor")
-        if doctor.user != user:
-            raise ValidationError("You can't access this doctor")
-
-        record.patient = validated_data.get("patient", record.patient)
-        record.reason_for_visit = validated_data.get("reason_for_visit", record.reason_for_visit)
-        record.symptom = validated_data.get("symptom", record.symptom)
-        record.medical_history = validated_data.get("medical_history", record.medical_history)
-        record.vital_signs = validated_data.get("vital_signs", record.vital_signs)
-        record.observation = validated_data.get("observation", record.observation)
-        record.diagnosis = validated_data.get("diagnosis", record.diagnosis)
-        record.primary_doctor = validated_data.get("primary_doctor", record.primary_doctor)
-        record.treatment_plan = validated_data.get("treatment_plan", record.treatment_plan)
-        record.template = validated_data.get("template", record.template)
-        
-        # Validate template
-        template: Template = record.template
-        if template.user != user or not validate_record_template(record, template):
-            raise ValidationError("Template and record are not matched")
-
-        record.save()
-        return record
-    
-
-class TreatmentSerializer(serializers.ModelSerializer):
-    template = TemplateSerializer(read_only=True)
-    record = RecordSerializer(read_only=True)
-    data = JSONDictField()
+    record_id = serializers.PrimaryKeyRelatedField(
+        queryset=Record.objects.all(), 
+        source='record'
+    )
 
     class Meta:
         model = Treatment
-        fields = ['id', 'template', 'record', 'data']
+        fields = ['id', 'record_id', 'name', 'cost', 'note', 'date', 'doctor', 'doctor_id']
         read_only_fields = ['id']
 
-    def create(self, validated_data):
-        treatment = Treatment()
-        treatment.template = validated_data.get("template")
-        treatment.record = validated_data.get("record")
-        treatment.data = validated_data.get("data")
+class RecordSerializer(serializers.ModelSerializer):
+    # template = TemplateSerializer(read_only=True)
+    # template_id = serializers.PrimaryKeyRelatedField(
+    #     write_only=True, 
+    #     queryset=Template.objects.all(), 
+    #     source='template'
+    # )
+    # patient_id = serializers.PrimaryKeyRelatedField(
+    #     read_only=True,
+    #     queryset=Patient.objects.all(), 
+    #     source='patient'
+    # )
+    vital_signs = JSONDictField()
+    treatment_plan = JSONListField()
+    treatments = TreatmentSerializer(many=True, read_only=True)
 
-        if not validate_treatment_template(treatment, treatment.template):
-            raise ValidationError("Template and treatment mismatch")
+    class Meta:
+        model = Record
+        fields = ['id', 'patient_id', 'reason_for_visit', 'symptom', 'medical_history',\
+                'vital_signs', 'diagnosis', 'treatment_plan', 'treatments']
+        read_only_fields = ['id']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        record_id = instance.id  
+        treatments = Treatment.objects.filter(record_id=record_id)
+        representation['treatments'] = TreatmentSerializer(treatments, many=True).data
+        return representation
+
+    # def create(self, validated_data):
+    #     user = validated_data.pop("user")
+
+    #     # Validate doctor
+    #     doctor: Doctor = validated_data.get("primary_doctor")
+    #     if doctor.user != user:
+    #         raise ValidationError("You can't access this doctor")
+
+    #     record = Record()
+    #     record.patient = validated_data.get("patient")
+    #     record.reason_for_visit = validated_data.get("reason_for_visit")
+    #     record.symptom = validated_data.get("symptom")
+    #     record.medical_history = validated_data.get("medical_history")
+    #     record.vital_signs = validated_data.get("vital_signs")
+    #     record.observation = validated_data.get("observation")
+    #     record.diagnosis = validated_data.get("diagnosis")
+    #     record.primary_doctor = validated_data.get("primary_doctor")
+    #     record.treatment_plan = validated_data.get("treatment_plan")
+    #     record.template = validated_data.get("template")
         
-        treatment.save()
-        return treatment
+    #     # Validate template
+    #     template: Template = record.template
+    #     if template.user != user or not validate_record_template(record, template):
+    #         raise ValidationError("Template and record are not matched")
+
+    #     record.save()
+    #     return record
+
     
-    def update(self, treatment: Treatment, validated_data):
-        treatment.template = validated_data.get("template", treatment.template)
-        treatment.record = validated_data.get("record", treatment.record)
-        treatment.data = validated_data.get("data", treatment.data)
+    # def update(self, record: Record, validated_data):
+    #     user = validated_data.pop("user")
 
-        if not validate_treatment_template(treatment, treatment.template):
-            raise ValidationError("Template and treatment mismatch")
+    #     # Validate doctor
+    #     doctor: Doctor = validated_data.get("primary_doctor")
+    #     if doctor.user != user:
+    #         raise ValidationError("You can't access this doctor")
+
+    #     record.patient = validated_data.get("patient", record.patient)
+    #     record.reason_for_visit = validated_data.get("reason_for_visit", record.reason_for_visit)
+    #     record.symptom = validated_data.get("symptom", record.symptom)
+    #     record.medical_history = validated_data.get("medical_history", record.medical_history)
+    #     record.vital_signs = validated_data.get("vital_signs", record.vital_signs)
+    #     record.observation = validated_data.get("observation", record.observation)
+    #     record.diagnosis = validated_data.get("diagnosis", record.diagnosis)
+    #     record.primary_doctor = validated_data.get("primary_doctor", record.primary_doctor)
+    #     record.treatment_plan = validated_data.get("treatment_plan", record.treatment_plan)
+    #     record.template = validated_data.get("template", record.template)
         
-        treatment.save()
-        return treatment
+    #     # Validate template
+    #     template: Template = record.template
+    #     if template.user != user or not validate_record_template(record, template):
+    #         raise ValidationError("Template and record are not matched")
+
+    #     record.save()
+    #     return record
+    
+

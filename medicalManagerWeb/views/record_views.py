@@ -1,21 +1,42 @@
 from rest_framework.decorators import api_view
-from rest_framework.request import Request
+from rest_framework import generics
 from ..core.success_response import *
-from ..service.record_service import *
+from ..service.patient_service import *
+from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from ..core.permissions import UserPermission
 
 
-@api_view(["POST", "GET"])
-def multiple_record_view(request, uid, pid):
-    if request.method == "POST":
-        return create_record(request.data, pid, uid)
-    elif request.method == "GET":
-        return get_all_records(pid)
+class RecordListCreateView(generics.ListCreateAPIView):
+    serializer_class = RecordSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['uid']
+        patient_id = self.kwargs['pid']
+        user = get_object_or_404(MedicalUser, id=user_id)
+        patient = get_object_or_404(Patient, id=patient_id)
+        queryset = Record.objects.filter(patient=patient, patient__user=user)
+        return queryset
+    
+    def perform_create(self, serializer):
+        serializer.validated_data['patient_id'] = self.kwargs['pid']
+        serializer.save()
+
+    def get_permissions(self):
+        return [IsAuthenticated(), UserPermission()]
     
 
-@api_view(["GET", "PATCH"])
-def single_record_view(request, uid, pid, rid):
-    print("VISIT SINGLE RECORD VIEW")
-    if request.method == "GET":
-        return get_record(rid)
-    elif request.method == "PATCH":
-        return update_record(request.data, pid, rid, uid)
+class RecordRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = RecordSerializer
+    lookup_field = 'id'
+    
+    def get_queryset(self):
+        user_id = self.kwargs['uid']
+        patient_id = self.kwargs['pid']
+        user = get_object_or_404(MedicalUser, id=user_id)
+        patient = get_object_or_404(Patient, id=patient_id)
+        queryset = Record.objects.filter(patient=patient, patient__user=user)
+        return queryset
+
+    def get_permissions(self):
+        return [IsAuthenticated(), UserPermission()]

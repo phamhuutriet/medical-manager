@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "medicalManagerWeb",
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
+    'djmoney'
 ]
 
 REST_FRAMEWORK = {
