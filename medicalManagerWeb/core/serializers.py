@@ -34,13 +34,6 @@ class RoleSerializer(serializers.ModelSerializer):
 
 
 class DoctorSerializer(serializers.ModelSerializer):
-    # role = RoleSerializer(read_only=True)
-    # role_id = serializers.PrimaryKeyRelatedField(
-    #     write_only=True, 
-    #     queryset=Role.objects.all(), 
-    #     source='role'
-    # )
-
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['date_of_birth'] = instance.date_of_birth.strftime('%d / %m / %Y')
@@ -161,7 +154,8 @@ class TestSerializer(serializers.ModelSerializer):
         return representation
 
     def to_internal_value(self, data):
-        data['created_at'] = datetime.strptime(data['created_at'], '%d / %m / %Y').date()
+        if 'created_at' in data:
+            data['created_at'] = datetime.strptime(data['created_at'], '%d / %m / %Y').date()
         return super().to_internal_value(data)
     
     class Meta:
@@ -191,5 +185,5 @@ class RecordSerializer(serializers.ModelSerializer):
         tests = Test.objects.filter(record_id=record_id)
         representation['tests'] = TestSerializer(tests, many=True).data
 
-        representation['created_at'] = instance.created_at.strftime('%d / %m / %Y')
+        # representation['created_at'] = instance.created_at.strftime('%d / %m / %Y')
         return representation
