@@ -16,6 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
+
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,4 +28,4 @@ urlpatterns = [
     path('user/<str:uid>/roles/', include("medicalManagerWeb.urls.role_urls")),
     path('user/<str:uid>/patients/', include("medicalManagerWeb.urls.patient_urls")),
     path('user/<str:uid>/templates/', include("medicalManagerWeb.urls.template_urls")),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

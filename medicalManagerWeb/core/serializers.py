@@ -123,7 +123,7 @@ class TemplateSerializer(serializers.ModelSerializer):
     
 
 class TreatmentSerializer(serializers.ModelSerializer):
-    doctor = DoctorSerializer()
+    doctor = DoctorSerializer(read_only=True)
     doctor_id = serializers.PrimaryKeyRelatedField(
         write_only=True, 
         queryset=Doctor.objects.all(), 
@@ -134,94 +134,62 @@ class TreatmentSerializer(serializers.ModelSerializer):
         source='record'
     )
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['date'] = instance.date.strftime('%d / %m / %Y')
+        return representation
+
+    def to_internal_value(self, data):
+        data['date'] = datetime.strptime(data['date'], '%d / %m / %Y').date()
+        return super().to_internal_value(data)
+
     class Meta:
         model = Treatment
         fields = ['id', 'record_id', 'name', 'cost', 'note', 'date', 'doctor', 'doctor_id']
         read_only_fields = ['id']
 
+
+class TestSerializer(serializers.ModelSerializer):
+    record_id = serializers.PrimaryKeyRelatedField(
+        queryset=Record.objects.all(), 
+        source='record'
+    )
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['created_at'] = instance.created_at.strftime('%d / %m / %Y')
+        return representation
+
+    def to_internal_value(self, data):
+        data['created_at'] = datetime.strptime(data['created_at'], '%d / %m / %Y').date()
+        return super().to_internal_value(data)
+    
+    class Meta:
+        model = Test
+        fields = ['id', 'name', 'created_at', 'record_id', 'image']
+
+
 class RecordSerializer(serializers.ModelSerializer):
-    # template = TemplateSerializer(read_only=True)
-    # template_id = serializers.PrimaryKeyRelatedField(
-    #     write_only=True, 
-    #     queryset=Template.objects.all(), 
-    #     source='template'
-    # )
-    # patient_id = serializers.PrimaryKeyRelatedField(
-    #     read_only=True,
-    #     queryset=Patient.objects.all(), 
-    #     source='patient'
-    # )
     vital_signs = JSONDictField()
     treatment_plan = JSONListField()
     treatments = TreatmentSerializer(many=True, read_only=True)
+    tests = TestSerializer(many=True, read_only=True)
 
     class Meta:
         model = Record
         fields = ['id', 'patient_id', 'reason_for_visit', 'symptom', 'medical_history',\
-                'vital_signs', 'diagnosis', 'treatment_plan', 'treatments']
+                'vital_signs', 'diagnosis', 'treatment_plan', 'treatments', 'created_at', 'tests']
         read_only_fields = ['id']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         record_id = instance.id  
+
         treatments = Treatment.objects.filter(record_id=record_id)
         representation['treatments'] = TreatmentSerializer(treatments, many=True).data
+
+        tests = Test.objects.filter(record_id=record_id)
+        representation['tests'] = TestSerializer(tests, many=True).data
+
+        representation['created_at'] = instance.created_at.strftime('%d / %m / %Y')
         return representation
-
-    # def create(self, validated_data):
-    #     user = validated_data.pop("user")
-
-    #     # Validate doctor
-    #     doctor: Doctor = validated_data.get("primary_doctor")
-    #     if doctor.user != user:
-    #         raise ValidationError("You can't access this doctor")
-
-    #     record = Record()
-    #     record.patient = validated_data.get("patient")
-    #     record.reason_for_visit = validated_data.get("reason_for_visit")
-    #     record.symptom = validated_data.get("symptom")
-    #     record.medical_history = validated_data.get("medical_history")
-    #     record.vital_signs = validated_data.get("vital_signs")
-    #     record.observation = validated_data.get("observation")
-    #     record.diagnosis = validated_data.get("diagnosis")
-    #     record.primary_doctor = validated_data.get("primary_doctor")
-    #     record.treatment_plan = validated_data.get("treatment_plan")
-    #     record.template = validated_data.get("template")
-        
-    #     # Validate template
-    #     template: Template = record.template
-    #     if template.user != user or not validate_record_template(record, template):
-    #         raise ValidationError("Template and record are not matched")
-
-    #     record.save()
-    #     return record
-
-    
-    # def update(self, record: Record, validated_data):
-    #     user = validated_data.pop("user")
-
-    #     # Validate doctor
-    #     doctor: Doctor = validated_data.get("primary_doctor")
-    #     if doctor.user != user:
-    #         raise ValidationError("You can't access this doctor")
-
-    #     record.patient = validated_data.get("patient", record.patient)
-    #     record.reason_for_visit = validated_data.get("reason_for_visit", record.reason_for_visit)
-    #     record.symptom = validated_data.get("symptom", record.symptom)
-    #     record.medical_history = validated_data.get("medical_history", record.medical_history)
-    #     record.vital_signs = validated_data.get("vital_signs", record.vital_signs)
-    #     record.observation = validated_data.get("observation", record.observation)
-    #     record.diagnosis = validated_data.get("diagnosis", record.diagnosis)
-    #     record.primary_doctor = validated_data.get("primary_doctor", record.primary_doctor)
-    #     record.treatment_plan = validated_data.get("treatment_plan", record.treatment_plan)
-    #     record.template = validated_data.get("template", record.template)
-        
-    #     # Validate template
-    #     template: Template = record.template
-    #     if template.user != user or not validate_record_template(record, template):
-    #         raise ValidationError("Template and record are not matched")
-
-    #     record.save()
-    #     return record
-    
-

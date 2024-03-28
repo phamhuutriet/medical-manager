@@ -75,7 +75,7 @@ class Patient(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     date_of_birth = models.DateField()
     address = models.CharField(max_length=255)
-    phone_number = PhoneNumberField()
+    phone_number = models.CharField(max_length=100)
     note = models.TextField(blank=True)
     allergies = models.TextField() # encoded list
     user = models.ForeignKey(MedicalUser, on_delete=models.CASCADE)
@@ -124,10 +124,13 @@ class Treatment(models.Model):
     cost = models.IntegerField(default=0)
     note = models.CharField(max_length=255)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    
+
+def upload_path(instance, filename):
+    return '/'.join(['covers', str(instance.title), filename])
+
 class Test(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     created_at = models.DateField() # Must be provided
-    image = models.ImageField(upload_to="test_images/")
     record = models.ForeignKey(Record, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="images/")
